@@ -10,7 +10,7 @@ This repository contains PyTorch implementations of various neural network modul
 - **Neural Network Modules:**
     - Linear
 - **Other features:**
-    - **Grid refinement:** Refine the grid size of the basis functions during training to improve the model's performance (for each layer independently).
+    - **Grid refinement (Experimental):** Refine the grid size of the basis functions during training to improve the model's performance (for each layer independently).
     - **Plot learned splines:** Visualize the learned basis functions to understand the model's behavior.
     - **Predefined training loop:** Training loop for common tasks such as regression and classification
 
@@ -32,11 +32,14 @@ pip install git+https://github.com/julianhoever/KANLib.git
 
 ## Credits
 
-This project is based on essential works in the field of Kolmogorov-Arnold networks and may use or build on parts of their implementations:
+This project is influenced by essential works in the field of Kolmogorov-Arnold networks:
 
 - **KANs: Kolmogorov-Arnold Networks ([Paper](https://arxiv.org/abs/2404.19756) | [Implementation](https://github.com/KindXiaoming/pykan))**
     - Original paper and implementation introducing KANs.
+    - ***Contribution to this work**: Basic understanding of KANs and their implementation.*
 - **Kolmogorov-Arnold Networks are Radial Basis Function Networks ([Paper](https://arxiv.org/abs/2405.06721) | [Implementation](https://github.com/ZiyaoLi/fast-kan))**
     - Implementation of KANs using gaussian radial basis functions.
+    - ***Contribution to this work**: Inspiration for KANs with radial basis functions and how to implement them efficiently (without copying code from the repository).*
 - **Efficient-KAN: An Efficient Implementation of Kolmogorov-Arnold Network ([Implementation](https://github.com/Blealtan/efficient-kan))**
     - An implementation of KANs with B-splines that focuses on performance improvements.
+    - ***Contribution to this work**: Use of the efficient B-spline basis function implementation of Efficient-KAN ([here](https://github.com/julianhoever/KANLib/blob/b76c6a47ec91acdfe4f208ad0498e4a9a04dbb21/src/kanlib/nn/bspline/bspline_basis.py#L23-L38)).*

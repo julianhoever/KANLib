@@ -1,8 +1,3 @@
-"""
-Implementation of B-spline basis functions is based on:
-https://github.com/Blealtan/efficient-kan/blob/7b6ce1c87f18c8bc90c208f6b494042344216b11/src/efficient_kan/kan.py
-"""
-
 from functools import partial
 
 import torch
@@ -26,6 +21,10 @@ class BSplineBasis(SplineBasis):
         return self.grid_size + self.spline_order
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Implementation of B-spline basis functions is based on:
+        https://github.com/Blealtan/efficient-kan/blob/7b6ce1c87f18c8bc90c208f6b494042344216b11/src/efficient_kan/kan.py#L78-L111
+        """
         g = self.grid
         x = x.unsqueeze(dim=-1)
 

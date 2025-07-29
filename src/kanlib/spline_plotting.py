@@ -23,6 +23,7 @@ def plot_spline(
     layer: _KanLayer,
     spline_index: int,
     resolution: int = 1000,
+    show_grid: bool = False,
     ax: Optional[Axes] = None,
 ) -> Axes:
     basis = layer.basis
@@ -32,7 +33,15 @@ def plot_spline(
 
     if ax is None:
         _, ax = plt.subplots()
-    ax.plot(x_spline, y_spline)
+
+    ax.plot(x_spline, y_spline, zorder=1)
+
+    if show_grid:
+        x_grid = basis.grid[
+            (basis.grid >= basis.grid_range[0]) & (basis.grid <= basis.grid_range[1])
+        ]
+        y_grid = compute_spline(layer.basis, coefficient[spline_index], x_grid)
+        ax.scatter(x_grid, y_grid, c="red", marker=".", zorder=2)
 
     return ax
 

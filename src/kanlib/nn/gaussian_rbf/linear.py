@@ -12,7 +12,7 @@ class Linear(LinearBase):
         grid_range: tuple[float, float] = (-2.0, 2.0),
         use_layer_norm: bool = True,
         use_base_branch: bool = True,
-        use_coefficient_weight: bool = True,
+        use_spline_weight: bool = True,
         init_coeff_std: float = 0.1,
     ) -> None:
         super().__init__(
@@ -23,6 +23,6 @@ class Linear(LinearBase):
             basis_factory=GaussianRbfBasis,
             use_layer_norm=use_layer_norm,
             use_base_branch=use_base_branch,
-            use_spline_weight=use_coefficient_weight,
+            use_spline_weight=use_spline_weight,
             init_coeff_std=init_coeff_std,
         )

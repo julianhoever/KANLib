@@ -36,9 +36,9 @@ def use_base_branch(request: pytest.FixtureRequest) -> bool:
 
 @pytest.fixture(
     params=[False, True],
-    ids=["without_coefficient_weight", "with_coefficient_weight"],
+    ids=["without_spline_weight", "with_spline_weight"],
 )
-def use_coefficient_weight(request: pytest.FixtureRequest) -> bool:
+def use_spline_weight(request: pytest.FixtureRequest) -> bool:
     return request.param
 
 
@@ -59,7 +59,7 @@ def linear(
     grid_size: int,
     use_layer_norm: bool,
     use_base_branch: bool,
-    use_coefficient_weight: bool,
+    use_spline_weight: bool,
 ) -> Linear:
     return Linear(
         in_features=in_features,
@@ -67,7 +67,7 @@ def linear(
         grid_size=grid_size,
         use_layer_norm=use_layer_norm,
         use_base_branch=use_base_branch,
-        use_coefficient_weight=use_coefficient_weight,
+        use_spline_weight=use_spline_weight,
     )
 
 

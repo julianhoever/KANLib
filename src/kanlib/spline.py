@@ -28,6 +28,8 @@ def compute_refined_coefficients(
     basis_values_fine = basis_fine(basis_fine.grid)
 
     coeff_fine = torch.linalg.lstsq(basis_values_fine, y_fine).solution
-    coeff_fine = coeff_fine.t().view(*coeff_coarse.shape[:-1], -1)
+    coeff_fine = coeff_fine.t().view(
+        *coeff_coarse.shape[:-1], basis_fine.num_basis_functions
+    )
 
     return coeff_fine

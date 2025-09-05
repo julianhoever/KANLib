@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from kanlib.nn.linear_base import LinearBase
+from kanlib.nn.base_modules.linear import LinearBase
 from kanlib.nn.spline_basis import SplineBasis
 
 
@@ -33,15 +33,15 @@ class TestGridRefinement:
             basis_factory=self.DummyBasis,
             use_base_branch=True,
             use_layer_norm=False,
-            use_coefficient_weight=True,
-            init_coefficient_std=0.1,
+            use_spline_weight=True,
+            init_coeff_std=0.1,
         )
 
     def test_refine_to_larger_grid_size(self, linear: LinearBase) -> None:
         linear.refine_grid(new_grid_size=8)
         assert linear.basis.grid_size == 8
         assert linear.basis.num_basis_functions == 8
-        assert linear.weight.coefficient.shape == (3, 2, 8)
+        assert linear.coefficients.shape == (3, 2, 8)
 
     def test_forward_after_refinement(self, linear: LinearBase) -> None:
         inputs = torch.ones(3, 2)

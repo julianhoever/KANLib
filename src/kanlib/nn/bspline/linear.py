@@ -1,6 +1,6 @@
 from functools import partial
 
-from kanlib.nn.linear_base import LinearBase
+from kanlib.nn.base_modules.linear import LinearBase
 
 from .bspline_basis import BSplineBasis
 
@@ -16,7 +16,7 @@ class Linear(LinearBase):
         use_layer_norm: bool = False,
         use_base_branch: bool = True,
         use_coefficient_weight: bool = True,
-        init_coefficient_std: float = 0.1,
+        init_coeff_std: float = 0.1,
     ) -> None:
         super().__init__(
             in_features=in_features,
@@ -26,6 +26,6 @@ class Linear(LinearBase):
             basis_factory=partial(BSplineBasis, spline_order=spline_order),
             use_layer_norm=use_layer_norm,
             use_base_branch=use_base_branch,
-            use_coefficient_weight=use_coefficient_weight,
-            init_coefficient_std=init_coefficient_std,
+            use_spline_weight=use_coefficient_weight,
+            init_coeff_std=init_coeff_std,
         )

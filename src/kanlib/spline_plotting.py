@@ -10,7 +10,7 @@ from kanlib.spline import compute_spline
 
 class _KanLayer(Protocol):
     basis: SplineBasis
-    weighted_coefficients: torch.Tensor
+    coefficients: torch.Tensor
 
 
 class _LinearLayer(Protocol):
@@ -26,7 +26,7 @@ def plot_spline(
     ax: Optional[Axes] = None,
 ) -> Axes:
     basis = layer.basis
-    coefficient = layer.weighted_coefficients.view(-1, basis.num_basis_functions)
+    coefficient = layer.coefficients.view(-1, basis.num_basis_functions).detach()
     x_spline = torch.linspace(*basis.grid_range, resolution)
     y_spline = compute_spline(layer.basis, coefficient[spline_index], x_spline)
 

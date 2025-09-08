@@ -22,6 +22,7 @@ dev = [
     "marimo[recommended]>=0.15.2",
     "mypy>=1.16.1",
     "pytest>=8.4.0",
+    "python-lsp-server>=1.13.1",
     "ruff>=0.11.13",
 ]
 

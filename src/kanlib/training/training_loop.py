@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from functools import partial
 from typing import Any
 
 import torch
@@ -20,9 +21,19 @@ def train(
     optimizer_kwargs: dict[str, Any],
     load_best: bool,
     device: torch.device,
+    num_workers: int = 0,
+    pin_memory: bool = False,
+    persistent_workers: bool = False,
 ) -> History:
-    dl_train = DataLoader(ds_train, batch_size=batch_size, shuffle=True)
-    dl_val = DataLoader(ds_val, batch_size=batch_size, shuffle=False)
+    dataloader = partial(
+        DataLoader,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        persistent_workers=persistent_workers,
+    )
+    dl_train = dataloader(ds_train, shuffle=True)
+    dl_val = dataloader(ds_val, shuffle=False)
 
     model.to(device)
     optimizer = optimizer_cls(model.parameters(), **optimizer_kwargs)

@@ -1,4 +1,3 @@
-import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -102,8 +101,6 @@ class KANModule(torch.nn.Module, ABC):
 
     @torch.no_grad
     def refine_grid(self, new_grid_size: int) -> None:
-        warnings.warn("Grid refinement is experimental and may not work as expected.")
-
         refined_basis = self.basis_factory(
             grid_size=new_grid_size, grid_range=self.basis.grid_range
         ).to(self.basis.grid.device)

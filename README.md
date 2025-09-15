@@ -10,7 +10,7 @@ This repository contains PyTorch implementations of various neural network modul
 - **Neural Network Modules:**
     - Linear
 - **Other features:**
-    - **Grid refinement (Experimental):** Refine the grid size of the basis functions during training to improve the model's performance (for each layer independently).
+    - **Grid refinement:** Refine the grid size of the basis functions during training to improve the model's performance (for each layer independently).
     - **Plot learned splines:** Visualize the learned basis functions to understand the model's behavior.
     - **Predefined training loop:** Training loop for common tasks such as regression and classification
 

@@ -34,11 +34,13 @@ def _(Callable, TensorDataset, partial, torch):
     def function_dataset(
         function: Callable[[torch.Tensor], torch.Tensor],
         num_samples: int,
-        var_ranges: list[tuple[int, int]]
+        var_ranges: list[tuple[int, int]],
     ) -> TensorDataset:
         def apply_function(inputs: torch.Tensor) -> torch.Tensor:
             single_inputs = inputs.unbind(dim=0)
-            return torch.stack([function(x) for x in single_inputs]).unsqueeze(dim=-1)
+            return torch.stack([function(x) for x in single_inputs]).unsqueeze(
+                dim=-1
+            )
 
         samples = torch.rand((num_samples, len(var_ranges)))
         for i, (var_min, var_max) in enumerate(var_ranges):
@@ -48,11 +50,15 @@ def _(Callable, TensorDataset, partial, torch):
 
         return TensorDataset(samples, targets)
 
+
     def func(inputs: torch.Tensor) -> torch.Tensor:
         x, y, z = torch.unbind(inputs)
         return x * torch.exp(x**2 * torch.exp(z**2))
 
-    create_ds = partial(function_dataset, function=func, var_ranges=[(-1, 1), (-1, 1), (-1, 1)])
+
+    create_ds = partial(
+        function_dataset, function=func, var_ranges=[(-1, 1), (-1, 1), (-1, 1)]
+    )
     ds_train = create_ds(num_samples=2000)
     ds_val = create_ds(num_samples=400)
     return ds_train, ds_val
@@ -85,7 +91,7 @@ def _(Linear, ds_train, ds_val, partial, torch, train):
         optimizer_cls=torch.optim.Adam,
         optimizer_kwargs=dict(lr=1e-3),
         load_best=False,
-        device=torch.device("cpu")
+        device=torch.device("cpu"),
     )
     _ = model.eval()
     return (model,)
@@ -94,11 +100,11 @@ def _(Linear, ds_train, ds_val, partial, torch, train):
 @app.cell
 def _(linear_spline_index, model, plot_spline, plt):
     fig, axs = plt.subplots(
-        nrows=len(model), 
+        nrows=len(model),
         ncols=max(l.in_features * l.out_features for l in model),
         figsize=(10, 5),
         sharey=True,
-        tight_layout=True
+        tight_layout=True,
     )
 
     for layer_idx in range(len(model)):
@@ -109,7 +115,7 @@ def _(linear_spline_index, model, plot_spline, plt):
                     layer=model[layer_idx],
                     spline_index=spline_idx,
                     show_grid=True,
-                    ax=axs[layer_idx, spline_idx]
+                    ax=axs[layer_idx, spline_idx],
                 )
 
     for ax in axs.flatten():

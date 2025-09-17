@@ -34,7 +34,7 @@ def _initialize_grid(
     scale = (max_value - min_value) / grid_size
     grid = torch.linspace(
         start=-spline_order / 2,
-        end=grid_size - spline_order / 2,
+        end=grid_size + spline_order / 2,
         steps=grid_size + spline_order,
         dtype=torch.get_default_dtype(),
     )

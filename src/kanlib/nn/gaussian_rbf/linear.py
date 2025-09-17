@@ -9,7 +9,7 @@ class Linear(LinearBase):
         in_features: int,
         out_features: int,
         grid_size: int,
-        grid_range: tuple[float, float] = (-2.0, 2.0),
+        grid_range: tuple[float, float] = (-1.0, 1.0),
         use_layer_norm: bool = True,
         use_base_branch: bool = True,
         use_spline_weight: bool = True,

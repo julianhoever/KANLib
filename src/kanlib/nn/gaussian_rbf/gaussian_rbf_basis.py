@@ -16,7 +16,9 @@ class GaussianRbfBasis(SplineBasis):
                 _initialize_grid, spline_order=self._APPROXIMATED_BSPLINE_ORDER
             ),
         )
-        self.epsilon = self.num_basis_functions / (self.grid.max() - self.grid.min())
+        self.epsilon = float(
+            self.num_basis_functions / (self.grid.max() - self.grid.min())
+        )
 
     @property
     def num_basis_functions(self) -> int:

@@ -21,6 +21,7 @@ class ModuleParamSpecs:
     coefficients: ParamSpec
     weight_spline: Optional[ParamSpec]
     weight_residual: Optional[ParamSpec]
+    bias_output: Optional[ParamSpec]
 
 
 class BasisFactory(Protocol):
@@ -32,10 +33,11 @@ class BasisFactory(Protocol):
 class KANModule(torch.nn.Module, ABC):
     def __init__(
         self,
-        base_shape: tuple[int, ...],
+        param_shape: tuple[int, ...],
         coefficients: ParamSpec,
         weight_spline: Optional[ParamSpec],
         weight_residual: Optional[ParamSpec],
+        bias_output: Optional[ParamSpec],
         grid_size: int,
         grid_range: tuple[float, float],
         basis_factory: BasisFactory,
@@ -48,17 +50,20 @@ class KANModule(torch.nn.Module, ABC):
             coefficients=coefficients,
             weight_spline=weight_spline,
             weight_residual=weight_residual,
+            bias_output=bias_output,
         )
 
         self.coefficients: torch.nn.Parameter
         self.weight_spline: torch.nn.Parameter | None
         self.weight_residual: torch.nn.Parameter | None
+        self.bias_output: torch.nn.Parameter | None
 
         self._add_parameter(
-            "coefficients", (*base_shape, self.basis.num_basis_functions)
+            "coefficients", (*param_shape, self.basis.num_basis_functions)
         )
-        self._add_parameter("weight_spline", (*base_shape, 1))
-        self._add_parameter("weight_residual", base_shape)
+        self._add_parameter("weight_spline", param_shape)
+        self._add_parameter("weight_residual", param_shape)
+        self._add_parameter("bias_output", (param_shape[0],))
 
     @abstractmethod
     def residual_forward(self, x: torch.Tensor) -> torch.Tensor: ...
@@ -69,15 +74,18 @@ class KANModule(torch.nn.Module, ABC):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         output = self.spline_forward(x)
 
-        if self._uses_residual_branch:
+        if self._use_residual_branch:
             output += self.residual_forward(x)
+
+        if self.bias_output is not None:
+            output += self.bias_output
 
         return output
 
     @property
     def weighted_coefficients(self) -> torch.Tensor:
         if self.weight_spline is not None:
-            return self.coefficients * self.weight_spline
+            return self.coefficients * self.weight_spline.unsqueeze(dim=-1)
         return self.coefficients
 
     @weighted_coefficients.setter
@@ -86,7 +94,7 @@ class KANModule(torch.nn.Module, ABC):
         if self.weight_spline is not None:
             weight_spline_spec = cast(ParamSpec, self.param_specs.weight_spline)
             self.weight_spline.data = weight_spline_spec.initializer(
-                torch.empty((*self.coefficients.shape[:-1], 1))
+                torch.empty(self.coefficients.shape[:-1])
             )
 
     @torch.no_grad
@@ -103,7 +111,7 @@ class KANModule(torch.nn.Module, ABC):
         self.weighted_coefficients = refined_coefficient
 
     @property
-    def _uses_residual_branch(self) -> bool:
+    def _use_residual_branch(self) -> bool:
         return self.weight_residual is not None
 
     def _add_parameter(self, name: str, shape: tuple[int, ...]) -> None:

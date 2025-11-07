@@ -6,7 +6,6 @@ from torch.nn.functional import linear, silu
 from torch.nn.init import normal_ as init_normal
 from torch.nn.init import ones_ as init_ones
 from torch.nn.init import xavier_uniform_ as init_xavier_uniform
-from torch.nn.init import zeros_ as init_zeros
 
 from kanlib.nn.kan_module import KANModule, ParamSpec
 from kanlib.nn.spline_basis import SplineBasis
@@ -36,8 +35,6 @@ class LinearBase(KANModule):
             coefficients=ParamSpec(partial(init_normal, mean=0, std=init_coeff_std)),
             weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
             weight_base=ParamSpec(init_xavier_uniform) if use_base_branch else None,
-            output_scale=ParamSpec(init_ones),
-            output_bias=ParamSpec(init_zeros),
             grid_size=grid_size,
             grid_range=grid_range,
             basis_factory=basis_factory,

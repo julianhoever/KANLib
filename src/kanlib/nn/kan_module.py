@@ -21,8 +21,6 @@ class ModuleParamSpecs:
     coefficients: ParamSpec
     weight_spline: Optional[ParamSpec]
     weight_base: Optional[ParamSpec]
-    output_scale: ParamSpec
-    output_bias: ParamSpec
 
 
 class BasisFactory(Protocol):
@@ -38,8 +36,6 @@ class KANModule(torch.nn.Module, ABC):
         coefficients: ParamSpec,
         weight_spline: Optional[ParamSpec],
         weight_base: Optional[ParamSpec],
-        output_scale: ParamSpec,
-        output_bias: ParamSpec,
         grid_size: int,
         grid_range: tuple[float, float],
         basis_factory: BasisFactory,
@@ -52,23 +48,17 @@ class KANModule(torch.nn.Module, ABC):
             coefficients=coefficients,
             weight_spline=weight_spline,
             weight_base=weight_base,
-            output_scale=output_scale,
-            output_bias=output_bias,
         )
 
         self.coefficients: torch.nn.Parameter
         self.weight_spline: torch.nn.Parameter | None
         self.weight_base: torch.nn.Parameter | None
-        self.output_scale: torch.nn.Parameter
-        self.output_bias: torch.nn.Parameter
 
         self._add_parameter(
             "coefficients", (*base_shape, self.basis.num_basis_functions)
         )
         self._add_parameter("weight_spline", (*base_shape, 1))
         self._add_parameter("weight_base", base_shape)
-        self._add_parameter("output_scale", (base_shape[0],))
-        self._add_parameter("output_bias", (base_shape[0],))
 
     @abstractmethod
     def base_forward(self, x: torch.Tensor) -> torch.Tensor: ...
@@ -82,7 +72,7 @@ class KANModule(torch.nn.Module, ABC):
         if self._uses_base_branch:
             output += self.base_forward(x)
 
-        return output * self.output_scale + self.output_bias
+        return output
 
     @property
     def weighted_coefficients(self) -> torch.Tensor:

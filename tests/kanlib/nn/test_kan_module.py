@@ -34,8 +34,6 @@ class KANModuleImpl(KANModule):
             coefficients=ParamSpec(init_ones),
             weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
             weight_base=ParamSpec(init_ones),
-            output_scale=ParamSpec(init_ones),
-            output_bias=ParamSpec(init_ones),
             grid_size=5,
             grid_range=(-1, 1),
             basis_factory=DummyBasis,

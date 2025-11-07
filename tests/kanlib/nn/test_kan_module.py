@@ -33,13 +33,13 @@ class KANModuleImpl(KANModule):
             base_shape=(3, 4),
             coefficients=ParamSpec(init_ones),
             weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
-            weight_base=ParamSpec(init_ones),
+            weight_residual=ParamSpec(init_ones),
             grid_size=5,
             grid_range=(-1, 1),
             basis_factory=DummyBasis,
         )
 
-    def base_forward(self, x: torch.Tensor) -> torch.Tensor:
+    def residual_forward(self, x: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError()
 
     def spline_forward(self, x: torch.Tensor) -> torch.Tensor:

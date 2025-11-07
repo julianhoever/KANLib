@@ -25,7 +25,7 @@ class LinearBase(KANModule):
         grid_size: int,
         grid_range: tuple[float, float],
         basis_factory: _BasisFactory,
-        use_base_branch: bool,
+        use_residual_branch: bool,
         use_layer_norm: bool,
         use_spline_weight: bool,
         init_coeff_std: float = 0.1,
@@ -34,7 +34,9 @@ class LinearBase(KANModule):
             base_shape=(out_features, in_features),
             coefficients=ParamSpec(partial(init_normal, mean=0, std=init_coeff_std)),
             weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
-            weight_base=ParamSpec(init_xavier_uniform) if use_base_branch else None,
+            weight_residual=ParamSpec(init_xavier_uniform)
+            if use_residual_branch
+            else None,
             grid_size=grid_size,
             grid_range=grid_range,
             basis_factory=basis_factory,
@@ -43,9 +45,9 @@ class LinearBase(KANModule):
         self.out_features = out_features
         self.layer_norm = torch.nn.LayerNorm(in_features) if use_layer_norm else None
 
-    def base_forward(self, x: torch.Tensor) -> torch.Tensor:
-        assert self.weight_base is not None
-        return linear(silu(x), self.weight_base)
+    def residual_forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert self.weight_residual is not None
+        return linear(silu(x), self.weight_residual)
 
     def spline_forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.layer_norm is not None:

@@ -31,7 +31,7 @@ class TestGridRefinement:
             grid_size=4,
             grid_range=(-1.0, 1.0),
             basis_factory=self.DummyBasis,
-            use_base_branch=True,
+            use_residual_branch=True,
             use_layer_norm=False,
             use_spline_weight=True,
             init_coeff_std=0.1,

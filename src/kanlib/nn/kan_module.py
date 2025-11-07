@@ -20,7 +20,7 @@ class ParamSpec:
 class ModuleParamSpecs:
     coefficients: ParamSpec
     weight_spline: Optional[ParamSpec]
-    weight_base: Optional[ParamSpec]
+    weight_residual: Optional[ParamSpec]
 
 
 class BasisFactory(Protocol):
@@ -35,7 +35,7 @@ class KANModule(torch.nn.Module, ABC):
         base_shape: tuple[int, ...],
         coefficients: ParamSpec,
         weight_spline: Optional[ParamSpec],
-        weight_base: Optional[ParamSpec],
+        weight_residual: Optional[ParamSpec],
         grid_size: int,
         grid_range: tuple[float, float],
         basis_factory: BasisFactory,
@@ -47,21 +47,21 @@ class KANModule(torch.nn.Module, ABC):
         self.param_specs = ModuleParamSpecs(
             coefficients=coefficients,
             weight_spline=weight_spline,
-            weight_base=weight_base,
+            weight_residual=weight_residual,
         )
 
         self.coefficients: torch.nn.Parameter
         self.weight_spline: torch.nn.Parameter | None
-        self.weight_base: torch.nn.Parameter | None
+        self.weight_residual: torch.nn.Parameter | None
 
         self._add_parameter(
             "coefficients", (*base_shape, self.basis.num_basis_functions)
         )
         self._add_parameter("weight_spline", (*base_shape, 1))
-        self._add_parameter("weight_base", base_shape)
+        self._add_parameter("weight_residual", base_shape)
 
     @abstractmethod
-    def base_forward(self, x: torch.Tensor) -> torch.Tensor: ...
+    def residual_forward(self, x: torch.Tensor) -> torch.Tensor: ...
 
     @abstractmethod
     def spline_forward(self, x: torch.Tensor) -> torch.Tensor: ...
@@ -69,8 +69,8 @@ class KANModule(torch.nn.Module, ABC):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         output = self.spline_forward(x)
 
-        if self._uses_base_branch:
-            output += self.base_forward(x)
+        if self._uses_residual_branch:
+            output += self.residual_forward(x)
 
         return output
 
@@ -103,8 +103,8 @@ class KANModule(torch.nn.Module, ABC):
         self.weighted_coefficients = refined_coefficient
 
     @property
-    def _uses_base_branch(self) -> bool:
-        return self.weight_base is not None
+    def _uses_residual_branch(self) -> bool:
+        return self.weight_residual is not None
 
     def _add_parameter(self, name: str, shape: tuple[int, ...]) -> None:
         spec = getattr(self.param_specs, name)

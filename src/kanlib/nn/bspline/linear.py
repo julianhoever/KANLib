@@ -14,7 +14,7 @@ class Linear(LinearBase):
         grid_size: int,
         grid_range: tuple[float, float] = (-1.0, 1.0),
         use_layer_norm: bool = False,
-        use_base_branch: bool = True,
+        use_residual_branch: bool = True,
         use_spline_weight: bool = True,
         init_coeff_std: float = 0.1,
     ) -> None:
@@ -25,7 +25,7 @@ class Linear(LinearBase):
             grid_range=grid_range,
             basis_factory=partial(BSplineBasis, spline_order=spline_order),
             use_layer_norm=use_layer_norm,
-            use_base_branch=use_base_branch,
+            use_residual_branch=use_residual_branch,
             use_spline_weight=use_spline_weight,
             init_coeff_std=init_coeff_std,
         )

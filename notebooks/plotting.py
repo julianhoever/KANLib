@@ -6,16 +6,17 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    from functools import partial
     from collections.abc import Callable
+    from functools import partial
 
+    import matplotlib.pyplot as plt
     import torch
     from torch.utils.data import TensorDataset
-    import matplotlib.pyplot as plt
 
     from kanlib.nn.bspline import Linear
+    from kanlib.spline_plotting import linear_spline_index, plot_spline
     from kanlib.training.training_loop import train
-    from kanlib.spline_plotting import plot_spline, linear_spline_index
+
     return (
         Callable,
         Linear,
@@ -38,9 +39,7 @@ def _(Callable, TensorDataset, partial, torch):
     ) -> TensorDataset:
         def apply_function(inputs: torch.Tensor) -> torch.Tensor:
             single_inputs = inputs.unbind(dim=0)
-            return torch.stack([function(x) for x in single_inputs]).unsqueeze(
-                dim=-1
-            )
+            return torch.stack([function(x) for x in single_inputs]).unsqueeze(dim=-1)
 
         samples = torch.rand((num_samples, len(var_ranges)))
         for i, (var_min, var_max) in enumerate(var_ranges):
@@ -50,11 +49,9 @@ def _(Callable, TensorDataset, partial, torch):
 
         return TensorDataset(samples, targets)
 
-
     def func(inputs: torch.Tensor) -> torch.Tensor:
         x, y, z = torch.unbind(inputs)
         return x * torch.exp(x**2 * torch.exp(z**2))
-
 
     create_ds = partial(
         function_dataset, function=func, var_ranges=[(-1, 1), (-1, 1), (-1, 1)]
@@ -71,7 +68,7 @@ def _(Linear, ds_train, ds_val, partial, torch, train):
         spline_order=3,
         grid_size=5,
         grid_range=(-1, 1),
-        use_base_branch=True,
+        use_residual_branch=True,
         use_spline_weight=True,
     )
 

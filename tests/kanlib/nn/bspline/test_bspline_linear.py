@@ -29,8 +29,8 @@ def use_layer_norm(request: pytest.FixtureRequest) -> bool:
     return request.param
 
 
-@pytest.fixture(params=[False, True], ids=["without_base", "with_base"])
-def use_base_branch(request: pytest.FixtureRequest) -> bool:
+@pytest.fixture(params=[False, True], ids=["without_residual", "with_residual"])
+def use_residual_branch(request: pytest.FixtureRequest) -> bool:
     return request.param
 
 
@@ -58,7 +58,7 @@ def linear(
     out_features: int,
     grid_size: int,
     use_layer_norm: bool,
-    use_base_branch: bool,
+    use_residual_branch: bool,
     use_spline_weight: bool,
 ) -> Linear:
     return Linear(
@@ -67,7 +67,7 @@ def linear(
         spline_order=3,
         grid_size=grid_size,
         use_layer_norm=use_layer_norm,
-        use_base_branch=use_base_branch,
+        use_residual_branch=use_residual_branch,
         use_spline_weight=use_spline_weight,
     )
 

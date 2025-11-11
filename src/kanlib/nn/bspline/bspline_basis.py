@@ -7,9 +7,14 @@ from kanlib.nn.spline_basis import SplineBasis
 
 class BSplineBasis(SplineBasis):
     def __init__(
-        self, spline_order: int, grid_size: int, grid_range: tuple[float, float]
+        self,
+        spline_order: int,
+        num_features: int,
+        grid_size: int,
+        grid_range: tuple[float, float],
     ) -> None:
         super().__init__(
+            num_features=num_features,
             grid_size=grid_size,
             grid_range=grid_range,
             initialize_grid=partial(_initialize_grid, spline_order=spline_order),
@@ -39,7 +44,10 @@ class BSplineBasis(SplineBasis):
 
 
 def _initialize_grid(
-    grid_size: int, grid_range: tuple[float, float], spline_order: int
+    num_features: int,
+    grid_size: int,
+    grid_range: tuple[float, float],
+    spline_order: int,
 ) -> torch.Tensor:
     min_value, max_value = grid_range
     scale = (max_value - min_value) / grid_size
@@ -47,5 +55,5 @@ def _initialize_grid(
         start=-spline_order,
         end=grid_size + spline_order + 1,
         dtype=torch.get_default_dtype(),
-    )
+    ).repeat(num_features, 1)
     return grid * scale + min_value

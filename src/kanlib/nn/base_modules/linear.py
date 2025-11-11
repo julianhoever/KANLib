@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Protocol
 
 import torch
 from torch.nn.functional import linear, silu
@@ -8,14 +7,7 @@ from torch.nn.init import ones_ as init_ones
 from torch.nn.init import xavier_uniform_ as init_xavier_uniform
 from torch.nn.init import zeros_ as init_zeros
 
-from kanlib.nn.kan_module import KANModule, ParamSpec
-from kanlib.nn.spline_basis import SplineBasis
-
-
-class _BasisFactory(Protocol):
-    def __call__(
-        self, grid_size: int, grid_range: tuple[float, float]
-    ) -> SplineBasis: ...
+from kanlib.nn.kan_module import BasisFactory, KANModule, ParamSpec
 
 
 class LinearBase(KANModule):
@@ -25,7 +17,7 @@ class LinearBase(KANModule):
         out_features: int,
         grid_size: int,
         grid_range: tuple[float, float],
-        basis_factory: _BasisFactory,
+        basis_factory: BasisFactory,
         use_output_bias: bool,
         use_layer_norm: bool,
         use_residual_branch: bool,

@@ -26,7 +26,7 @@ class ModuleParamSpecs:
 
 class BasisFactory(Protocol):
     def __call__(
-        self, grid_size: int, grid_range: tuple[float, float]
+        self, num_features: int, grid_size: int, grid_range: tuple[float, float]
     ) -> SplineBasis: ...
 
 
@@ -43,7 +43,11 @@ class KANModule(torch.nn.Module, ABC):
         basis_factory: BasisFactory,
     ) -> None:
         super().__init__()
-        self.basis = basis_factory(grid_size=grid_size, grid_range=grid_range)
+        out_features, in_features = param_shape[:2]
+
+        self.basis = basis_factory(
+            num_features=in_features, grid_size=grid_size, grid_range=grid_range
+        )
         self.basis_factory = basis_factory
 
         self.param_specs = ModuleParamSpecs(
@@ -63,7 +67,7 @@ class KANModule(torch.nn.Module, ABC):
         )
         self._add_parameter("weight_spline", param_shape)
         self._add_parameter("weight_residual", param_shape)
-        self._add_parameter("bias_output", (param_shape[0],))
+        self._add_parameter("bias_output", (out_features,))
 
     @abstractmethod
     def residual_forward(self, x: torch.Tensor) -> torch.Tensor: ...
@@ -100,13 +104,17 @@ class KANModule(torch.nn.Module, ABC):
     @torch.no_grad
     def refine_grid(self, new_grid_size: int) -> None:
         refined_basis = self.basis_factory(
-            grid_size=new_grid_size, grid_range=self.basis.grid_range
+            num_features=self.basis.num_features,
+            grid_size=new_grid_size,
+            grid_range=self.basis.grid_range,
         ).to(self.basis.grid.device)
+
         refined_coefficient = compute_refined_coefficients(
             basis_coarse=self.basis,
             basis_fine=refined_basis,
             coeff_coarse=self.weighted_coefficients,
         )
+
         self.basis = refined_basis
         self.weighted_coefficients = refined_coefficient
 

@@ -25,7 +25,7 @@ class BSplineBasis(SplineBasis):
     def num_basis_functions(self) -> int:
         return self.grid_size + self.spline_order
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def _perform_forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Implementation of B-spline basis functions is based on:
         https://github.com/Blealtan/efficient-kan/blob/7b6ce1c87f18c8bc90c208f6b494042344216b11/src/efficient_kan/kan.py#L78-L111

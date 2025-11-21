@@ -37,3 +37,11 @@ class SplineBasis(torch.nn.Module, ABC):
     @property
     @abstractmethod
     def num_basis_functions(self) -> int: ...
+
+    @abstractmethod
+    def _perform_forward(self, x: torch.Tensor) -> torch.Tensor: ...
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if x.shape[-1] != self.num_features:
+            raise ValueError("Input must be of shape (*, num_features).")
+        return self._perform_forward(x)

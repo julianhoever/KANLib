@@ -26,6 +26,8 @@ class LinearBase(KANModule):
     ) -> None:
         super().__init__(
             param_shape=(out_features, in_features),
+            in_feature_dim=1,
+            out_feature_dim=0,
             coefficients=ParamSpec(partial(init_normal, mean=0, std=init_coeff_std)),
             weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
             weight_residual=(

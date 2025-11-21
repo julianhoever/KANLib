@@ -35,7 +35,7 @@ class DummyBasis(SplineBasis):
     def num_basis_functions(self) -> int:
         return self.grid_size
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def _perform_forward(self, x: torch.Tensor) -> torch.Tensor:
         return torch.ones(*x.shape, self.num_basis_functions)
 
 
@@ -43,6 +43,8 @@ class KANModuleImpl(KANModule):
     def __init__(self, use_spline_weight: bool) -> None:
         super().__init__(
             param_shape=(3, 4),
+            in_feature_dim=1,
+            out_feature_dim=0,
             coefficients=ParamSpec(init_ones),
             weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
             weight_residual=ParamSpec(init_ones),

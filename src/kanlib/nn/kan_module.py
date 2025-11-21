@@ -34,6 +34,8 @@ class KANModule(torch.nn.Module, ABC):
     def __init__(
         self,
         param_shape: tuple[int, ...],
+        in_feature_dim: int,
+        out_feature_dim: int,
         coefficients: ParamSpec,
         weight_spline: Optional[ParamSpec],
         weight_residual: Optional[ParamSpec],
@@ -43,7 +45,10 @@ class KANModule(torch.nn.Module, ABC):
         basis_factory: BasisFactory,
     ) -> None:
         super().__init__()
-        out_features, in_features = param_shape[:2]
+        in_features = param_shape[in_feature_dim]
+        out_features = param_shape[out_feature_dim]
+
+        self.in_feature_dim = in_feature_dim
 
         self.basis = basis_factory(
             num_features=in_features, grid_size=grid_size, grid_range=grid_range
@@ -112,7 +117,7 @@ class KANModule(torch.nn.Module, ABC):
         refined_coefficient = compute_refined_coefficients(
             basis_coarse=self.basis,
             basis_fine=refined_basis,
-            coeff_coarse=self.weighted_coefficients,
+            coeff_coarse=self.weighted_coefficients.movedim(self.in_feature_dim, -2),
         )
 
         self.basis = refined_basis

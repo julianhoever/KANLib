@@ -7,21 +7,32 @@ from kanlib.nn.spline_basis import SplineBasis
 
 class TestGridRefinement:
     class DummyBasis(SplineBasis):
-        def __init__(self, grid_size: int, grid_range: tuple[float, float]) -> None:
+        def __init__(
+            self, num_features: int, grid_size: int, grid_range: tuple[float, float]
+        ) -> None:
             super().__init__(
+                num_features=num_features,
                 grid_size=grid_size,
                 grid_range=grid_range,
-                initialize_grid=lambda grid_size, grid_range: torch.linspace(
-                    *grid_range, grid_size
-                ),
+                initialize_grid=self._initialize_grid,
             )
 
         @property
         def num_basis_functions(self) -> int:
             return self.grid_size
 
-        def forward(self, x: torch.Tensor) -> torch.Tensor:
+        def _perform_forward(self, x: torch.Tensor) -> torch.Tensor:
             return torch.ones(*x.shape, self.num_basis_functions)
+
+        @staticmethod
+        def _initialize_grid(
+            num_features: int, grid_size: int, grid_range: tuple[float, float]
+        ) -> torch.Tensor:
+            return (
+                torch.linspace(*grid_range, grid_size)
+                .unsqueeze(dim=0)
+                .repeat(num_features, 1)
+            )
 
     @pytest.fixture
     def linear(self) -> LinearBase:

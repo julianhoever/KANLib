@@ -8,8 +8,8 @@ from kanlib.nn.spline_basis import SplineBasis
 class BSplineBasis(SplineBasis):
     def __init__(
         self,
-        spline_order: int,
         num_features: int,
+        spline_order: int,
         grid_size: int,
         grid_range: tuple[float, float],
     ) -> None:
@@ -33,11 +33,11 @@ class BSplineBasis(SplineBasis):
         g = self.grid
         x = x.unsqueeze(dim=-1)
 
-        b = ((x >= g[:-1]) & (x < g[1:])).type(x.dtype)
+        b = ((x >= g[:, :-1]) & (x < g[:, 1:])).type(x.dtype)
 
         for k in range(1, self.spline_order + 1):
-            b1 = (x - g[: -(k + 1)]) / (g[k:-1] - g[: -(k + 1)]) * b[..., :-1]
-            b2 = (g[k + 1 :] - x) / (g[k + 1 :] - g[1:-k]) * b[..., 1:]
+            b1 = (x - g[:, : -(k + 1)]) / (g[:, k:-1] - g[:, : -(k + 1)]) * b[..., :-1]
+            b2 = (g[:, k + 1 :] - x) / (g[:, k + 1 :] - g[:, 1:-k]) * b[..., 1:]
             b = b1 + b2
 
         return b

@@ -43,5 +43,5 @@ class SplineBasis(torch.nn.Module, ABC):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if x.shape[-1] != self.num_features:
-            raise ValueError("Input must be of shape (*, num_features).")
+            raise ValueError("`x` must be of shape `(*, num_features)`.")
         return self._perform_forward(x)

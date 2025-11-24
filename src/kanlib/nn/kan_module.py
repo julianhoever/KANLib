@@ -108,20 +108,20 @@ class KANModule(torch.nn.Module, ABC):
 
     @torch.no_grad
     def refine_grid(self, new_grid_size: int) -> None:
-        refined_basis = self.basis_factory(
+        basis_fine = self.basis_factory(
             num_features=self.basis.num_features,
             grid_size=new_grid_size,
             grid_range=self.basis.grid_range,
         ).to(self.basis.grid.device)
 
-        refined_coefficient = compute_refined_coefficients(
+        coeff_fine = compute_refined_coefficients(
             basis_coarse=self.basis,
-            basis_fine=refined_basis,
+            basis_fine=basis_fine,
             coeff_coarse=self.weighted_coefficients.movedim(self.in_feature_dim, -2),
         )
 
-        self.basis = refined_basis
-        self.weighted_coefficients = refined_coefficient
+        self.basis = basis_fine
+        self.weighted_coefficients = coeff_fine.movedim(-2, self.in_feature_dim)
 
     @property
     def _use_residual_branch(self) -> bool:

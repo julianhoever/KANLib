@@ -6,7 +6,7 @@ from torch.nn.init import ones_ as init_ones
 from torch.nn.init import zeros_ as init_zeros
 from torch.testing import assert_close
 
-from kanlib.nn.kan_module import KANModule, ParamSpec
+from kanlib.nn.kan_module import KANModule, ModuleParamSpecs, ParamSpec
 from kanlib.nn.spline_basis import SplineBasis
 
 
@@ -45,10 +45,12 @@ class KANModuleImpl(KANModule):
             param_shape=(3, 4),
             in_feature_dim=1,
             out_feature_dim=0,
-            coefficients=ParamSpec(init_ones),
-            weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
-            weight_residual=ParamSpec(init_ones),
-            bias_output=ParamSpec(init_zeros),
+            param_specs=ModuleParamSpecs(
+                coefficients=ParamSpec(init_ones),
+                weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
+                weight_residual=ParamSpec(init_ones),
+                bias_output=ParamSpec(init_zeros),
+            ),
             grid_size=5,
             grid_range=(-1, 1),
             basis_factory=DummyBasis,

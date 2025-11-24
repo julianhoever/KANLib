@@ -7,7 +7,7 @@ from torch.nn.init import ones_ as init_ones
 from torch.nn.init import xavier_uniform_ as init_xavier_uniform
 from torch.nn.init import zeros_ as init_zeros
 
-from kanlib.nn.kan_module import BasisFactory, KANModule, ParamSpec
+from kanlib.nn.kan_module import BasisFactory, KANModule, ModuleParamSpecs, ParamSpec
 
 
 class LinearBase(KANModule):
@@ -28,12 +28,16 @@ class LinearBase(KANModule):
             param_shape=(out_features, in_features),
             in_feature_dim=1,
             out_feature_dim=0,
-            coefficients=ParamSpec(partial(init_normal, mean=0, std=init_coeff_std)),
-            weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
-            weight_residual=(
-                ParamSpec(init_xavier_uniform) if use_residual_branch else None
+            param_specs=ModuleParamSpecs(
+                coefficients=ParamSpec(
+                    partial(init_normal, mean=0, std=init_coeff_std)
+                ),
+                weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
+                weight_residual=(
+                    ParamSpec(init_xavier_uniform) if use_residual_branch else None
+                ),
+                bias_output=ParamSpec(init_zeros) if use_output_bias else None,
             ),
-            bias_output=ParamSpec(init_zeros) if use_output_bias else None,
             grid_size=grid_size,
             grid_range=grid_range,
             basis_factory=basis_factory,

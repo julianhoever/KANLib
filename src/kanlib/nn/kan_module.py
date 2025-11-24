@@ -36,10 +36,7 @@ class KANModule(torch.nn.Module, ABC):
         param_shape: tuple[int, ...],
         in_feature_dim: int,
         out_feature_dim: int,
-        coefficients: ParamSpec,
-        weight_spline: Optional[ParamSpec],
-        weight_residual: Optional[ParamSpec],
-        bias_output: Optional[ParamSpec],
+        param_specs: ModuleParamSpecs,
         grid_size: int,
         grid_range: tuple[float, float],
         basis_factory: BasisFactory,
@@ -47,20 +44,13 @@ class KANModule(torch.nn.Module, ABC):
         super().__init__()
         in_features = param_shape[in_feature_dim]
         out_features = param_shape[out_feature_dim]
-
         self.in_feature_dim = in_feature_dim
 
         self.basis = basis_factory(
             num_features=in_features, grid_size=grid_size, grid_range=grid_range
         )
         self.basis_factory = basis_factory
-
-        self.param_specs = ModuleParamSpecs(
-            coefficients=coefficients,
-            weight_spline=weight_spline,
-            weight_residual=weight_residual,
-            bias_output=bias_output,
-        )
+        self.param_specs = param_specs
 
         self.coefficients: torch.nn.Parameter
         self.weight_spline: torch.nn.Parameter | None

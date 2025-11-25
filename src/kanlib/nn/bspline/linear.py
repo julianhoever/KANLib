@@ -1,5 +1,7 @@
 from functools import partial
 
+import torch
+
 from kanlib.nn.base_modules.linear import LinearBase
 
 from .bspline_basis import BSplineBasis
@@ -12,7 +14,7 @@ class Linear(LinearBase):
         out_features: int,
         spline_order: int,
         grid_size: int,
-        grid_range: tuple[float, float] = (-1.0, 1.0),
+        grid_range: tuple[float, float] | torch.Tensor = (-1.0, 1.0),
         use_output_bias: bool = True,
         use_layer_norm: bool = False,
         use_residual_branch: bool = True,
@@ -23,9 +25,8 @@ class Linear(LinearBase):
             in_features=in_features,
             out_features=out_features,
             grid_size=grid_size,
-            basis_factory=partial(
-                BSplineBasis, spline_order=spline_order, grid_range=grid_range
-            ),
+            grid_range=grid_range,
+            basis_factory=partial(BSplineBasis, spline_order=spline_order),
             use_output_bias=use_output_bias,
             use_layer_norm=use_layer_norm,
             use_residual_branch=use_residual_branch,

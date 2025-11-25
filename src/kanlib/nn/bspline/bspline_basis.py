@@ -11,14 +11,13 @@ class BSplineBasis(SplineBasis):
         num_features: int,
         spline_order: int,
         grid_size: int,
-        grid_range: tuple[float, float],
+        grid_range: tuple[float, float] | torch.Tensor,
     ) -> None:
         super().__init__(
             num_features=num_features,
             grid_size=grid_size,
-            initialize_grid=partial(
-                _initialize_grid, spline_order=spline_order, grid_range=grid_range
-            ),
+            grid_range=grid_range,
+            initialize_grid=partial(_initialize_grid, spline_order=spline_order),
         )
         self.spline_order = spline_order
 
@@ -47,14 +46,14 @@ class BSplineBasis(SplineBasis):
 def _initialize_grid(
     num_features: int,
     grid_size: int,
-    grid_range: tuple[float, float],
+    grid_range: torch.Tensor,
     spline_order: int,
 ) -> torch.Tensor:
-    min_value, max_value = grid_range
-    scale = (max_value - min_value) / grid_size
+    gmin, gmax = grid_range.unsqueeze(dim=-2).unbind(dim=-1)
+    scale = (gmax - gmin) / grid_size
     grid = torch.arange(
         start=-spline_order,
         end=grid_size + spline_order + 1,
         dtype=torch.get_default_dtype(),
     ).repeat(num_features, 1)
-    return grid * scale + min_value
+    return grid * scale + gmin

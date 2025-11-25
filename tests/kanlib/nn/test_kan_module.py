@@ -11,17 +11,19 @@ from kanlib.nn.spline_basis import SplineBasis
 
 
 class DummyBasis(SplineBasis):
-    def __init__(self, num_features: int, grid_size: int) -> None:
+    def __init__(
+        self,
+        num_features: int,
+        grid_size: int,
+        grid_range: tuple[float, float] | torch.Tensor,
+    ) -> None:
         super().__init__(
             num_features=num_features,
             grid_size=grid_size,
-            initialize_grid=self._initialize_grid,
-        )
-
-    @staticmethod
-    def _initialize_grid(num_features: int, grid_size: int) -> torch.Tensor:
-        return (
-            torch.linspace(-1, 1, grid_size).unsqueeze(dim=-1).repeat(num_features, 1)
+            grid_range=grid_range,
+            initialize_grid=lambda num_features, grid_size, grid_range: torch.empty(
+                num_features, grid_size
+            ),
         )
 
     @property
@@ -29,7 +31,7 @@ class DummyBasis(SplineBasis):
         return self.grid_size
 
     def _perform_forward(self, x: torch.Tensor) -> torch.Tensor:
-        return torch.ones(*x.shape, self.num_basis_functions)
+        raise NotImplementedError()
 
 
 class KANModuleImpl(KANModule):
@@ -45,6 +47,7 @@ class KANModuleImpl(KANModule):
                 bias_output=ParamSpec(init_zeros),
             ),
             grid_size=5,
+            grid_range=(-1, 1),
             basis_factory=DummyBasis,
         )
 

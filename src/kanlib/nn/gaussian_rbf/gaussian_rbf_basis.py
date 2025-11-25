@@ -1,5 +1,3 @@
-from functools import partial
-
 import torch
 
 from kanlib.nn.spline_basis import SplineBasis
@@ -9,12 +7,16 @@ _APPROXIMATED_BSPLINE_ORDER = 3
 
 class GaussianRbfBasis(SplineBasis):
     def __init__(
-        self, num_features: int, grid_size: int, grid_range: tuple[float, float]
+        self,
+        num_features: int,
+        grid_size: int,
+        grid_range: tuple[float, float] | torch.Tensor,
     ) -> None:
         super().__init__(
             num_features=num_features,
             grid_size=grid_size,
-            initialize_grid=partial(_initialize_grid, grid_range=grid_range),
+            grid_range=grid_range,
+            initialize_grid=_initialize_grid,
         )
         self.epsilon = float(
             self.num_basis_functions / (self.grid.max() - self.grid.min())
@@ -30,14 +32,14 @@ class GaussianRbfBasis(SplineBasis):
 
 
 def _initialize_grid(
-    num_features: int, grid_size: int, grid_range: tuple[float, float]
+    num_features: int, grid_size: int, grid_range: torch.Tensor
 ) -> torch.Tensor:
-    min_value, max_value = grid_range
-    scale = (max_value - min_value) / grid_size
+    gmin, gmax = grid_range.unsqueeze(dim=-2).unbind(dim=-1)
+    scale = (gmax - gmin) / grid_size
     grid = torch.linspace(
         start=-_APPROXIMATED_BSPLINE_ORDER / 2,
         end=grid_size + _APPROXIMATED_BSPLINE_ORDER / 2,
         steps=grid_size + _APPROXIMATED_BSPLINE_ORDER,
         dtype=torch.get_default_dtype(),
     ).repeat(num_features, 1)
-    return grid * scale + min_value
+    return grid * scale + gmin

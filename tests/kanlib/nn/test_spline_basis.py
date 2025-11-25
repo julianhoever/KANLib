@@ -9,8 +9,7 @@ class SplineBasisImpl(SplineBasis):
         super().__init__(
             num_features=num_features,
             grid_size=grid_size,
-            grid_range=(-1, 1),
-            initialize_grid=lambda num_features, grid_size, grid_range: torch.ones(1),
+            initialize_grid=lambda num_features, grid_size: torch.ones(1),
         )
 
     @property

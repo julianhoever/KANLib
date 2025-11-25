@@ -16,8 +16,9 @@ class BSplineBasis(SplineBasis):
         super().__init__(
             num_features=num_features,
             grid_size=grid_size,
-            grid_range=grid_range,
-            initialize_grid=partial(_initialize_grid, spline_order=spline_order),
+            initialize_grid=partial(
+                _initialize_grid, spline_order=spline_order, grid_range=grid_range
+            ),
         )
         self.spline_order = spline_order
 

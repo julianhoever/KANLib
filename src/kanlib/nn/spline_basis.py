@@ -5,18 +5,12 @@ import torch
 
 
 class _InitializeGrid(Protocol):
-    def __call__(
-        self, num_features: int, grid_size: int, grid_range: tuple[float, float]
-    ) -> torch.Tensor: ...
+    def __call__(self, num_features: int, grid_size: int) -> torch.Tensor: ...
 
 
 class SplineBasis(torch.nn.Module, ABC):
     def __init__(
-        self,
-        num_features: int,
-        grid_size: int,
-        grid_range: tuple[float, float],
-        initialize_grid: _InitializeGrid,
+        self, num_features: int, grid_size: int, initialize_grid: _InitializeGrid
     ) -> None:
         super().__init__()
         if grid_size < 1:
@@ -24,14 +18,20 @@ class SplineBasis(torch.nn.Module, ABC):
 
         self.num_features = num_features
         self.grid_size = grid_size
-        self.grid_range = grid_range
-        self.initialize_grid = initialize_grid
         self.grid: torch.Tensor
         self.register_buffer(
             "grid",
-            self.initialize_grid(
-                num_features=num_features, grid_size=grid_size, grid_range=grid_range
-            ),
+            initialize_grid(num_features=num_features, grid_size=grid_size),
+        )
+
+    @property
+    def grid_range(self) -> torch.Tensor:
+        return torch.cat(
+            [
+                self.grid.min(dim=-1).values.unsqueeze(dim=-1),
+                self.grid.max(dim=-1).values.unsqueeze(dim=-1),
+            ],
+            dim=-1,
         )
 
     @property

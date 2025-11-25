@@ -27,8 +27,8 @@ def test_epsilon_is_single_scalar(rbf: GaussianRbfBasis) -> None:
 
 
 def test_grid_oversample_is_equal(rbf: GaussianRbfBasis) -> None:
-    lower_grid_bound_distance = torch.abs(rbf.grid_range[0] - rbf.grid[:, 0])
-    upper_grid_bound_distance = torch.abs(rbf.grid_range[1] - rbf.grid[:, -1])
+    lower_grid_bound_distance = torch.abs(rbf.grid_range[:, 0] - rbf.grid[:, 0])
+    upper_grid_bound_distance = torch.abs(rbf.grid_range[:, 1] - rbf.grid[:, -1])
     assert_close(lower_grid_bound_distance, upper_grid_bound_distance)
 
 

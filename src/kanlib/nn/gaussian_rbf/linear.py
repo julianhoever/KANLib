@@ -1,3 +1,5 @@
+from functools import partial
+
 from kanlib.nn.base_modules.linear import LinearBase
 
 from .gaussian_rbf_basis import GaussianRbfBasis
@@ -20,8 +22,7 @@ class Linear(LinearBase):
             in_features=in_features,
             out_features=out_features,
             grid_size=grid_size,
-            grid_range=grid_range,
-            basis_factory=GaussianRbfBasis,
+            basis_factory=partial(GaussianRbfBasis, grid_range=grid_range),
             use_output_bias=use_output_bias,
             use_layer_norm=use_layer_norm,
             use_residual_branch=use_residual_branch,

@@ -85,11 +85,16 @@ def test_bspline_basis_is_equivalent_to_scipy(basis: BSplineBasis) -> None:
             "a wrong value in this case. (The last value of the output differs.)"
         )
 
-    inputs = (
-        torch.linspace(*basis.grid_range, 1000)
-        .unsqueeze(dim=-1)
-        .repeat(1, basis.num_features)
+    gmin, gmax = basis.grid_range.unbind(dim=-1)
+
+    inputs = torch.cat(
+        [
+            torch.linspace(gmin[feat_idx], gmax[feat_idx], 1000).unsqueeze(-1)
+            for feat_idx in range(basis.num_features)
+        ],
+        dim=-1,
     )
+
     outputs = basis(inputs)
 
     for feat_idx in range(basis.num_features):

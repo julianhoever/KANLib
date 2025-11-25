@@ -23,8 +23,9 @@ class Linear(LinearBase):
             in_features=in_features,
             out_features=out_features,
             grid_size=grid_size,
-            grid_range=grid_range,
-            basis_factory=partial(BSplineBasis, spline_order=spline_order),
+            basis_factory=partial(
+                BSplineBasis, spline_order=spline_order, grid_range=grid_range
+            ),
             use_output_bias=use_output_bias,
             use_layer_norm=use_layer_norm,
             use_residual_branch=use_residual_branch,

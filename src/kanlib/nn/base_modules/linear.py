@@ -16,7 +16,6 @@ class LinearBase(KANModule):
         in_features: int,
         out_features: int,
         grid_size: int,
-        grid_range: tuple[float, float],
         basis_factory: BasisFactory,
         use_output_bias: bool,
         use_layer_norm: bool,
@@ -39,7 +38,6 @@ class LinearBase(KANModule):
                 bias_output=ParamSpec(init_zeros) if use_output_bias else None,
             ),
             grid_size=grid_size,
-            grid_range=grid_range,
             basis_factory=basis_factory,
         )
         self.in_features = in_features

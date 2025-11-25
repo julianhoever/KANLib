@@ -25,9 +25,7 @@ class ModuleParamSpecs:
 
 
 class BasisFactory(Protocol):
-    def __call__(
-        self, num_features: int, grid_size: int, grid_range: tuple[float, float]
-    ) -> SplineBasis: ...
+    def __call__(self, num_features: int, grid_size: int) -> SplineBasis: ...
 
 
 class KANModule(torch.nn.Module, ABC):
@@ -38,7 +36,6 @@ class KANModule(torch.nn.Module, ABC):
         out_feature_dim: int,
         param_specs: ModuleParamSpecs,
         grid_size: int,
-        grid_range: tuple[float, float],
         basis_factory: BasisFactory,
     ) -> None:
         super().__init__()
@@ -46,9 +43,7 @@ class KANModule(torch.nn.Module, ABC):
         out_features = param_shape[out_feature_dim]
         self.in_feature_dim = in_feature_dim
 
-        self.basis = basis_factory(
-            num_features=in_features, grid_size=grid_size, grid_range=grid_range
-        )
+        self.basis = basis_factory(num_features=in_features, grid_size=grid_size)
         self.basis_factory = basis_factory
         self.param_specs = param_specs
 
@@ -99,9 +94,7 @@ class KANModule(torch.nn.Module, ABC):
     @torch.no_grad
     def refine_grid(self, new_grid_size: int) -> None:
         basis_fine = self.basis_factory(
-            num_features=self.basis.num_features,
-            grid_size=new_grid_size,
-            grid_range=self.basis.grid_range,
+            num_features=self.basis.num_features, grid_size=new_grid_size
         ).to(self.basis.grid.device)
 
         coeff_fine = compute_refined_coefficients(

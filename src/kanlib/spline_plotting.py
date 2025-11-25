@@ -5,7 +5,6 @@ import torch
 from matplotlib.axes import Axes
 
 from kanlib.nn.spline_basis import SplineBasis
-from kanlib.spline import compute_spline
 
 
 class _KanLayer(Protocol):
@@ -29,7 +28,7 @@ def plot_spline(
     basis = layer.basis
     coefficient = layer.coefficients.view(-1, basis.num_basis_functions).detach()
     x_spline = torch.linspace(*basis.grid_range, resolution)
-    y_spline = compute_spline(layer.basis, coefficient[spline_index], x_spline)
+    y_spline = _compute_spline(layer.basis, coefficient[spline_index], x_spline)
 
     if ax is None:
         _, ax = plt.subplots()
@@ -40,7 +39,7 @@ def plot_spline(
         x_grid = basis.grid[
             (basis.grid >= basis.grid_range[0]) & (basis.grid <= basis.grid_range[1])
         ]
-        y_grid = compute_spline(layer.basis, coefficient[spline_index], x_grid)
+        y_grid = _compute_spline(layer.basis, coefficient[spline_index], x_grid)
         ax.scatter(x_grid, y_grid, c="red", marker=".", alpha=alpha, zorder=2)
 
     return ax
@@ -48,3 +47,15 @@ def plot_spline(
 
 def linear_spline_index(linear: _LinearLayer, input_idx: int, output_idx: int) -> int:
     return output_idx * linear.in_features + input_idx
+
+
+def _compute_spline(
+    basis: SplineBasis, coefficient: torch.Tensor, inputs: torch.Tensor
+) -> torch.Tensor:
+    assert inputs.dim() == 1
+    assert coefficient.shape[-1] == basis.num_basis_functions
+
+    inputs = inputs.unsqueeze(dim=-1)
+    flat_coeff = coefficient.view(-1, basis.num_basis_functions)
+    flat_spline = torch.sum(basis(inputs) * flat_coeff, dim=-1).transpose(0, 1)
+    return flat_spline.view(*coefficient.shape[:-1], -1)

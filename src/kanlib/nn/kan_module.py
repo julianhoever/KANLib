@@ -5,7 +5,7 @@ from typing import Optional, Protocol, cast
 
 import torch
 
-from kanlib.spline import compute_refined_coefficients
+from kanlib.refinement import compute_refined_coefficients
 
 from .spline_basis import SplineBasis
 

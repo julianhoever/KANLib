@@ -4,7 +4,7 @@ import pytest
 import torch
 
 from kanlib.nn.bspline.bspline_basis import BSplineBasis
-from kanlib.spline import compute_refined_coefficients
+from kanlib.refinement import compute_refined_coefficients
 
 
 class TestComputeRefinedCoefficients:

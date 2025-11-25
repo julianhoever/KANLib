@@ -3,18 +3,6 @@ import torch
 from kanlib.nn.spline_basis import SplineBasis
 
 
-def compute_spline(
-    basis: SplineBasis, coefficient: torch.Tensor, inputs: torch.Tensor
-) -> torch.Tensor:
-    assert inputs.dim() == 1
-    assert coefficient.shape[-1] == basis.num_basis_functions
-
-    inputs = inputs.unsqueeze(dim=-1)
-    flat_coeff = coefficient.view(-1, basis.num_basis_functions)
-    flat_spline = torch.sum(basis(inputs) * flat_coeff, dim=-1).transpose(0, 1)
-    return flat_spline.view(*coefficient.shape[:-1], -1)
-
-
 def compute_refined_coefficients(
     basis_coarse: SplineBasis, basis_fine: SplineBasis, coeff_coarse: torch.Tensor
 ) -> torch.Tensor:

@@ -1,55 +1,34 @@
 from abc import ABC, abstractmethod
-from typing import Protocol
+from collections.abc import Callable
 
 import torch
-
-
-class _InitializeGrid(Protocol):
-    def __call__(
-        self,
-        num_features: int,
-        grid_size: int,
-        grid_range: torch.Tensor,
-    ) -> torch.Tensor: ...
 
 
 class SplineBasis(torch.nn.Module, ABC):
     def __init__(
         self,
-        num_features: int,
         grid_size: int,
-        grid_range: tuple[float, float] | torch.Tensor,
-        initialize_grid: _InitializeGrid,
+        spline_range: torch.Tensor,
+        initialize_grid: Callable[[], torch.Tensor],
     ) -> None:
         super().__init__()
-        if grid_size < 1:
-            raise ValueError("`grid_size` must be at least 1.")
+        if spline_range.ndim != 2 or spline_range.shape[-1] != 2:
+            raise ValueError("`spline_range` must be of shape `(num_features, 2)`")
 
-        if isinstance(grid_range, torch.Tensor):
-            if grid_range.shape != (num_features, 2):
-                raise ValueError("`grid_range` must be of shape `(num_features, 2)`")
-        else:
-            grid_range = _convert_grid_range_to_tensor(grid_range, num_features)
-
-        self.num_features = num_features
         self.grid_size = grid_size
+        self.spline_range = spline_range
+
         self.grid: torch.Tensor
-        self.register_buffer(
-            "grid",
-            initialize_grid(
-                num_features=num_features, grid_size=grid_size, grid_range=grid_range
-            ),
-        )
+        self.register_buffer("grid", initialize_grid())
+
+        if self.grid.ndim != 2 or self.grid.shape[0] != self.spline_range.shape[0]:
+            raise ValueError(
+                "`grid` must be of shape `(num_features, num_grid_points)`"
+            )
 
     @property
-    def grid_range(self) -> torch.Tensor:
-        return torch.cat(
-            [
-                self.grid.min(dim=-1).values.unsqueeze(dim=-1),
-                self.grid.max(dim=-1).values.unsqueeze(dim=-1),
-            ],
-            dim=-1,
-        )
+    def num_features(self) -> int:
+        return self.grid.shape[0]
 
     @property
     @abstractmethod
@@ -59,14 +38,8 @@ class SplineBasis(torch.nn.Module, ABC):
     def _perform_forward(self, x: torch.Tensor) -> torch.Tensor: ...
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if x.shape[-1] != self.num_features:
-            raise ValueError("`x` must be of shape `(*, num_features)`.")
+        if self.num_features != 1 and x.shape[-1] != self.num_features:
+            raise ValueError(
+                f"Expected {self.num_features} features, but got {x.shape[-1]}."
+            )
         return self._perform_forward(x)
-
-
-def _convert_grid_range_to_tensor(
-    grid_range: tuple[float, float], num_features: int
-) -> torch.Tensor:
-    return torch.tensor(grid_range, dtype=torch.get_default_dtype()).repeat(
-        num_features, 1
-    )

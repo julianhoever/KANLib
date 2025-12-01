@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from typing import Optional
+
 import pytest
 import torch
 
@@ -7,15 +10,15 @@ from kanlib.nn.spline_basis import SplineBasis
 class SplineBasisImpl(SplineBasis):
     def __init__(
         self,
-        num_features: int = 1,
-        grid_size: int = 1,
-        grid_range: tuple[float, float] | torch.Tensor = (-1, 1),
+        spline_range: torch.Tensor,
+        initialize_grid: Optional[Callable[[], torch.Tensor]] = None,
     ) -> None:
         super().__init__(
-            num_features=num_features,
-            grid_size=grid_size,
-            grid_range=grid_range,
-            initialize_grid=lambda num_features, grid_size, grid_range: grid_range,
+            grid_size=1,
+            spline_range=spline_range,
+            initialize_grid=(lambda: spline_range)
+            if initialize_grid is None
+            else initialize_grid,
         )
 
     @property
@@ -26,52 +29,73 @@ class SplineBasisImpl(SplineBasis):
         raise NotImplementedError()
 
 
-@pytest.mark.parametrize("grid_size", [0, -1, -2])
-def test_raises_error_on_grid_size_smaller_one(grid_size: int) -> None:
-    with pytest.raises(ValueError):
-        _ = SplineBasisImpl(grid_size=grid_size)
-
-
-@pytest.mark.parametrize("grid_range_tensor_shape", [(3,), (3, 1), (3, 2, 1)])
-def test_raises_error_on_invalid_grid_range_tensor(
-    grid_range_tensor_shape: tuple[int, ...],
+@pytest.mark.parametrize("spline_range_shape", [(2,), (3, 1), (4, 3, 2)])
+def test_raises_error_on_invalid_spline_range_shape(
+    spline_range_shape: tuple[int, ...],
 ) -> None:
     with pytest.raises(ValueError):
+        _ = SplineBasisImpl(spline_range=torch.empty(*spline_range_shape))
+
+
+@pytest.mark.parametrize(
+    "grid_shape",
+    argvalues=[(10,), (2, 10), (1, 2, 10)],
+    ids=[
+        "grid with missing feature dim",
+        "grid with wrong number of features",
+        "grid with too many dimensions",
+    ],
+)
+def test_raises_error_if_grid_is_initialized_incorrectly(
+    grid_shape: tuple[int, ...],
+) -> None:
+    spline_range_shape = (3, 2)
+    with pytest.raises(ValueError):
         _ = SplineBasisImpl(
-            num_features=3, grid_range=torch.empty(*grid_range_tensor_shape)
+            spline_range=torch.empty(*spline_range_shape),
+            initialize_grid=lambda: torch.empty(*grid_shape),
         )
 
 
-def test_grid_range_tuple_leads_to_correct_grid_range() -> None:
-    grid_range = (-2.0, 2.0)
-    spline_basis = SplineBasisImpl(num_features=3, grid_range=grid_range)
-    assert spline_basis.grid_range.shape == (3, 2)
-    assert (spline_basis.grid_range == torch.tensor(grid_range).repeat(3, 1)).all()
-
-
-@pytest.mark.parametrize("num_features", [1, 2, 4, 5])
-def test_forward_raises_error_on_invalid_num_features(
-    subtests: pytest.Subtests, num_features: int
-) -> None:
-    spline_basis = SplineBasisImpl(num_features=3)
-
-    for ndim in [1, 2, 3]:
-        with subtests.test():
-            inputs = torch.empty(*([1] * (ndim - 1)), num_features)
-
-            with pytest.raises(ValueError):
-                _ = spline_basis(inputs)
-
-
 @pytest.mark.parametrize("num_features", [1, 2, 3])
-def test_forward_does_not_raises_error_on_valid_num_features(
-    subtests: pytest.Subtests, num_features: int
+def test_num_features_determined_correctly(num_features: int) -> None:
+    spline_basis = SplineBasisImpl(spline_range=torch.empty(num_features, 2))
+    assert spline_basis.num_features == num_features
+
+
+@pytest.mark.parametrize("input_features", [2, 5])
+def test_forward_raises_error_if_number_of_features_not_match(
+    input_features: int,
 ) -> None:
-    spline_basis = SplineBasisImpl(num_features=num_features)
+    spline_basis = SplineBasisImpl(spline_range=torch.empty(3, 2))
+    inputs = torch.ones(input_features)
+    with pytest.raises(ValueError):
+        _ = spline_basis(inputs)
 
-    for ndim in [1, 2, 3]:
-        with subtests.test():
-            inputs = torch.empty(*([1] * (ndim - 1)), num_features)
 
-            with pytest.raises(NotImplementedError):
-                _ = spline_basis(inputs)
+@pytest.mark.parametrize(
+    "input_shape",
+    argvalues=[(5,), (3, 5), (3, 4, 5)],
+    ids=["1d-input", "2d-input", "3d-input"],
+)
+def test_forward_not_raises_error_on_valid_number_of_features(
+    input_shape: tuple[int, ...],
+) -> None:
+    spline_basis = SplineBasisImpl(spline_range=torch.empty(5, 2))
+    inputs = torch.empty(*input_shape)
+    with pytest.raises(NotImplementedError):
+        _ = spline_basis(inputs)
+
+
+@pytest.mark.parametrize(
+    "input_shape",
+    argvalues=[(5,), (5, 4), (5, 4, 3)],
+    ids=["1d-input", "2d-input", "3d-input"],
+)
+def test_forward_not_raises_error_on_unfeatured_input_for_single_feature(
+    input_shape: tuple[int, ...],
+) -> None:
+    spline_basis = SplineBasisImpl(spline_range=torch.empty(1, 2))
+    inputs = torch.empty(*input_shape)
+    with pytest.raises(NotImplementedError):
+        _ = spline_basis(inputs)

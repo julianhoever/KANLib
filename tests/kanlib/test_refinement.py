@@ -44,10 +44,9 @@ class TestComputeRefinedCoefficients:
         grid_size: int,
     ) -> BSplineBasis:
         return BSplineBasis(
-            num_features=num_features,
             spline_order=spline_order,
             grid_size=grid_size,
-            grid_range=(-1.0, 1.0),
+            spline_range=torch.tensor([[-1.0, 1.0]] * num_features),
         )
 
     @pytest.mark.parametrize("grid_size", [1, 4])

@@ -7,28 +7,24 @@ from kanlib.nn.gaussian_rbf.gaussian_rbf_basis import GaussianRbfBasis
 
 @pytest.fixture
 def rbf() -> GaussianRbfBasis:
-    return GaussianRbfBasis(num_features=2, grid_size=3, grid_range=(-1.0, 1.0))
+    return GaussianRbfBasis(grid_size=3, spline_range=torch.tensor([[-1.0, 1.0]]))
 
 
 def test_grid_has_two_dimensions(rbf: GaussianRbfBasis) -> None:
-    assert rbf.grid.dim() == 2
+    assert rbf.grid.ndim == 2
+
+
+def test_epsilon_has_two_dimensions(rbf: GaussianRbfBasis) -> None:
+    assert rbf.epsilon.ndim == 2
 
 
 def test_correct_number_of_grid(rbf: GaussianRbfBasis) -> None:
     assert rbf.grid.shape[-1] == rbf.num_basis_functions
 
 
-def test_correct_number_of_features(rbf: GaussianRbfBasis) -> None:
-    assert rbf.grid.shape[0] == rbf.num_features
-
-
-def test_epsilon_is_single_scalar(rbf: GaussianRbfBasis) -> None:
-    assert isinstance(rbf.epsilon, float)
-
-
 def test_grid_oversample_is_equal(rbf: GaussianRbfBasis) -> None:
-    lower_grid_bound_distance = torch.abs(rbf.grid_range[:, 0] - rbf.grid[:, 0])
-    upper_grid_bound_distance = torch.abs(rbf.grid_range[:, 1] - rbf.grid[:, -1])
+    lower_grid_bound_distance = torch.abs(rbf.spline_range[:, 0] - rbf.grid[:, 0])
+    upper_grid_bound_distance = torch.abs(rbf.spline_range[:, 1] - rbf.grid[:, -1])
     assert_close(lower_grid_bound_distance, upper_grid_bound_distance)
 
 
@@ -41,7 +37,18 @@ def test_grid_oversample_is_equal(rbf: GaussianRbfBasis) -> None:
     ],
     ids=["single", "batch", "batch_with_channels"],
 )
-def test_forward_pass_returns_correct_shape(
+def test_forward_returns_correct_shape(
     rbf: GaussianRbfBasis, x: torch.Tensor
 ) -> None:
     assert rbf(x).shape == (*x.shape, rbf.num_basis_functions)
+
+@pytest.mark.parametrize("input_shape", [(1,), (3,), (2, 3), (2, 3, 1), (2, 3, 4, 5)])
+def test_forward_works_on_every_input_for_single_feature(
+    input_shape: tuple[int, ...],
+) -> None:
+    basis = GaussianRbfBasis(
+        grid_size=10, spline_range=torch.tensor([[-1.0, 1.0]])
+    )
+    inputs = torch.empty(*input_shape)
+    outputs = basis(inputs)
+    assert outputs.shape == (*inputs.shape, basis.num_basis_functions)

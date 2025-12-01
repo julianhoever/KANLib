@@ -27,7 +27,7 @@ def plot_spline(
 ) -> Axes:
     basis = layer.basis
     coefficient = layer.coefficients.view(-1, basis.num_basis_functions).detach()
-    x_spline = torch.linspace(*basis.grid_range, resolution)
+    x_spline = torch.linspace(*basis.spline_range, resolution)
     y_spline = _compute_spline(layer.basis, coefficient[spline_index], x_spline)
 
     if ax is None:
@@ -37,7 +37,8 @@ def plot_spline(
 
     if show_grid:
         x_grid = basis.grid[
-            (basis.grid >= basis.grid_range[0]) & (basis.grid <= basis.grid_range[1])
+            (basis.grid >= basis.spline_range[0])
+            & (basis.grid <= basis.spline_range[1])
         ]
         y_grid = _compute_spline(layer.basis, coefficient[spline_index], x_grid)
         ax.scatter(x_grid, y_grid, c="red", marker=".", alpha=alpha, zorder=2)

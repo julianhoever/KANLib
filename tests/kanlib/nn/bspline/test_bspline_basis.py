@@ -20,63 +20,60 @@ def reference_bspline_basis(
 
 @pytest.fixture(
     params=[
-        dict(num_features=1, spline_order=0, grid_size=1, grid_range=(-1, 1)),
-        dict(num_features=1, spline_order=1, grid_size=1, grid_range=(-1, 1)),
-        dict(num_features=2, spline_order=3, grid_size=10, grid_range=(-1, 1)),
-        dict(num_features=2, spline_order=10, grid_size=3, grid_range=(-1, 1)),
-        dict(num_features=3, spline_order=3, grid_size=10, grid_range=(-2, 2)),
-        dict(num_features=3, spline_order=3, grid_size=10, grid_range=(2, 4)),
+        dict(grid_size=1, spline_order=0, num_features=1),
+        dict(grid_size=5, spline_order=1, num_features=2),
+        dict(grid_size=10, spline_order=3, num_features=3),
     ],
     ids=[
-        "num_features=1, spline_order=0, grid_size=1, grid_range=(-1, 1)",
-        "num_features=1, spline_order=1, grid_size=1, grid_range=(-1, 1)",
-        "num_features=2, spline_order=3, grid_size=10, grid_range=(-1, 1)",
-        "num_features=2, spline_order=10, grid_size=3, grid_range=(-1, 1)",
-        "num_features=3, spline_order=3, grid_size=10, grid_range=(-2, 2)",
-        "num_features=3, spline_order=3, grid_size=10, grid_range=(2, 4)",
+        "grid_size=1, spline_order=0, num_features=1",
+        "grid_size=5, spline_order=1, num_features=2",
+        "grid_size=10, spline_order=3, num_features=3",
     ],
 )
 def basis(request: pytest.FixtureRequest) -> BSplineBasis:
-    return BSplineBasis(**request.param)
-
+    return BSplineBasis(
+        grid_size=request.param["grid_size"],
+        spline_range=torch.tensor([[-1, 1]] * request.param["num_features"]),
+        spline_order=request.param["spline_order"],
+    )
 
 @pytest.mark.parametrize("grid_size", [0, -1])
 def test_raises_error_on_invalid_grid_size(grid_size: int) -> None:
     with pytest.raises(ValueError):
         _ = BSplineBasis(
-            num_features=1, spline_order=0, grid_size=grid_size, grid_range=(-1.0, 1.0)
+            grid_size=grid_size,
+            spline_range=torch.Tensor([[-1, 1]]),
+            spline_order=0,
         )
-
 
 def test_number_of_basis_functions(basis: BSplineBasis) -> None:
     assert basis.num_basis_functions == basis.grid_size + basis.spline_order
 
-
-def test_number_of_grid_points(basis: BSplineBasis) -> None:
+def test_grid_has_correct_shape(basis: BSplineBasis) -> None:
     assert basis.grid.shape == (
         basis.num_features,
         basis.grid_size + 1 + 2 * basis.spline_order,
     )
 
-
 def test_grid_is_monotonic_increasing(basis: BSplineBasis) -> None:
     assert (basis.grid[:, 1:] > basis.grid[:, :-1]).all()
 
-
-def test_forward_returns_correct_number_of_basis_functions(basis: BSplineBasis) -> None:
-    inputs = torch.ones(3, basis.num_features)
+def test_forward_returns_correct_number_of_basis_functions(
+    basis: BSplineBasis
+) -> None:
+    inputs = torch.ones(10, basis.num_features)
     outputs = basis(inputs)
     assert outputs.shape == (*inputs.shape, basis.num_basis_functions)
-
 
 @pytest.mark.parametrize("batched", [True, False])
 def test_can_handle_batched_and_unbatched_inputs(
     basis: BSplineBasis, batched: bool
 ) -> None:
-    inputs = torch.ones((3, basis.num_features) if batched else (basis.num_features,))
+    inputs = torch.ones(
+        (5, basis.num_features) if batched else (basis.num_features,)
+    )
     outputs = basis(inputs)
     assert outputs.shape == (*inputs.shape, basis.num_basis_functions)
-
 
 def test_bspline_basis_is_equivalent_to_scipy(basis: BSplineBasis) -> None:
     if basis.spline_order == 0:
@@ -85,16 +82,15 @@ def test_bspline_basis_is_equivalent_to_scipy(basis: BSplineBasis) -> None:
             "a wrong value in this case. (The last value of the output differs.)"
         )
 
-    gmin, gmax = basis.grid_range.unbind(dim=-1)
+    smin, smax = basis.spline_range.unbind(dim=-1)
 
     inputs = torch.cat(
         [
-            torch.linspace(gmin[feat_idx], gmax[feat_idx], 1000).unsqueeze(-1)
+            torch.linspace(smin[feat_idx], smax[feat_idx], 1000).unsqueeze(dim=-1)
             for feat_idx in range(basis.num_features)
         ],
         dim=-1,
     )
-
     outputs = basis(inputs)
 
     for feat_idx in range(basis.num_features):
@@ -107,3 +103,15 @@ def test_bspline_basis_is_equivalent_to_scipy(basis: BSplineBasis) -> None:
             )
             actual_outputs = outputs[:, feat_idx, base_idx]
             assert_close(actual_outputs, reference_outputs)
+
+
+@pytest.mark.parametrize("input_shape", [(1,), (3,), (2, 3), (2, 3, 1), (2, 3, 4, 5)])
+def test_forward_works_on_every_input_for_single_feature(
+    input_shape: tuple[int, ...],
+) -> None:
+    basis = BSplineBasis(
+        grid_size=10, spline_range=torch.tensor([[-1.0, 1.0]]), spline_order=3
+    )
+    inputs = torch.empty(*input_shape)
+    outputs = basis(inputs)
+    assert outputs.shape == (*inputs.shape, basis.num_basis_functions)

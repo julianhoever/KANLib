@@ -8,18 +8,24 @@ from kanlib.nn.spline_basis import SplineBasis
 class BSplineBasis(SplineBasis):
     def __init__(
         self,
-        num_features: int,
-        spline_order: int,
         grid_size: int,
-        grid_range: tuple[float, float] | torch.Tensor,
+        spline_range: torch.Tensor,
+        spline_order: int,
     ) -> None:
         super().__init__(
-            num_features=num_features,
             grid_size=grid_size,
-            grid_range=grid_range,
-            initialize_grid=partial(_initialize_grid, spline_order=spline_order),
+            spline_range=spline_range,
+            initialize_grid=partial(
+                _initialize_grid,
+                grid_size=grid_size,
+                spline_range=spline_range,
+                spline_order=spline_order,
+            ),
         )
         self.spline_order = spline_order
+
+        if self.grid_size < 1:
+            raise ValueError("`grid_size` must be at least 1")
 
     @property
     def num_basis_functions(self) -> int:
@@ -33,27 +39,30 @@ class BSplineBasis(SplineBasis):
         g = self.grid
         x = x.unsqueeze(dim=-1)
 
-        b = ((x >= g[:, :-1]) & (x < g[:, 1:])).type(x.dtype)
+        b = ((x >= g[..., :-1]) & (x < g[..., 1:])).type(x.dtype)
 
         for k in range(1, self.spline_order + 1):
-            b1 = (x - g[:, : -(k + 1)]) / (g[:, k:-1] - g[:, : -(k + 1)]) * b[..., :-1]
-            b2 = (g[:, k + 1 :] - x) / (g[:, k + 1 :] - g[:, 1:-k]) * b[..., 1:]
+            b1 = (
+                (x - g[..., : -(k + 1)])
+                / (g[..., k:-1] - g[..., : -(k + 1)])
+                * b[..., :-1]
+            )
+            b2 = (g[..., k + 1 :] - x) / (g[..., k + 1 :] - g[..., 1:-k]) * b[..., 1:]
             b = b1 + b2
 
         return b
 
 
 def _initialize_grid(
-    num_features: int,
     grid_size: int,
-    grid_range: torch.Tensor,
+    spline_range: torch.Tensor,
     spline_order: int,
 ) -> torch.Tensor:
-    gmin, gmax = grid_range.unsqueeze(dim=-2).unbind(dim=-1)
-    scale = (gmax - gmin) / grid_size
+    smin, smax = spline_range.unsqueeze(dim=-2).unbind(dim=-1)
+    scale = (smax - smin) / grid_size
     grid = torch.arange(
         start=-spline_order,
         end=grid_size + spline_order + 1,
         dtype=torch.get_default_dtype(),
-    ).repeat(num_features, 1)
-    return grid * scale + gmin
+    ).repeat(spline_range.shape[0], 1)
+    return grid * scale + smin

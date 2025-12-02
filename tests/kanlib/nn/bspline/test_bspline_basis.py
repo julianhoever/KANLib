@@ -37,6 +37,7 @@ def basis(request: pytest.FixtureRequest) -> BSplineBasis:
         spline_order=request.param["spline_order"],
     )
 
+
 @pytest.mark.parametrize("grid_size", [0, -1])
 def test_raises_error_on_invalid_grid_size(grid_size: int) -> None:
     with pytest.raises(ValueError):
@@ -46,8 +47,10 @@ def test_raises_error_on_invalid_grid_size(grid_size: int) -> None:
             spline_order=0,
         )
 
+
 def test_number_of_basis_functions(basis: BSplineBasis) -> None:
     assert basis.num_basis_functions == basis.grid_size + basis.spline_order
+
 
 def test_grid_has_correct_shape(basis: BSplineBasis) -> None:
     assert basis.grid.shape == (
@@ -55,25 +58,25 @@ def test_grid_has_correct_shape(basis: BSplineBasis) -> None:
         basis.grid_size + 1 + 2 * basis.spline_order,
     )
 
+
 def test_grid_is_monotonic_increasing(basis: BSplineBasis) -> None:
     assert (basis.grid[:, 1:] > basis.grid[:, :-1]).all()
 
-def test_forward_returns_correct_number_of_basis_functions(
-    basis: BSplineBasis
-) -> None:
+
+def test_forward_returns_correct_number_of_basis_functions(basis: BSplineBasis) -> None:
     inputs = torch.ones(10, basis.num_features)
     outputs = basis(inputs)
     assert outputs.shape == (*inputs.shape, basis.num_basis_functions)
+
 
 @pytest.mark.parametrize("batched", [True, False])
 def test_can_handle_batched_and_unbatched_inputs(
     basis: BSplineBasis, batched: bool
 ) -> None:
-    inputs = torch.ones(
-        (5, basis.num_features) if batched else (basis.num_features,)
-    )
+    inputs = torch.ones((5, basis.num_features) if batched else (basis.num_features,))
     outputs = basis(inputs)
     assert outputs.shape == (*inputs.shape, basis.num_basis_functions)
+
 
 def test_bspline_basis_is_equivalent_to_scipy(basis: BSplineBasis) -> None:
     if basis.spline_order == 0:

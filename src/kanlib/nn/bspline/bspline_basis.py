@@ -7,10 +7,7 @@ from kanlib.nn.spline_basis import SplineBasis
 
 class BSplineBasis(SplineBasis):
     def __init__(
-        self,
-        grid_size: int,
-        spline_range: torch.Tensor,
-        spline_order: int,
+        self, grid_size: int, spline_range: torch.Tensor, spline_order: int
     ) -> None:
         super().__init__(
             grid_size=grid_size,
@@ -54,9 +51,7 @@ class BSplineBasis(SplineBasis):
 
 
 def _initialize_grid(
-    grid_size: int,
-    spline_range: torch.Tensor,
-    spline_order: int,
+    grid_size: int, spline_range: torch.Tensor, spline_order: int
 ) -> torch.Tensor:
     smin, smax = spline_range.unsqueeze(dim=-2).unbind(dim=-1)
     scale = (smax - smin) / grid_size

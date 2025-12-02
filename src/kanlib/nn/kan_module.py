@@ -65,25 +65,6 @@ class KANModule(torch.nn.Module, ABC):
         self._add_parameter("weight_residual", param_shape)
         self._add_parameter("bias_output", (param_shape[out_feature_dim],))
 
-    @abstractmethod
-    def residual_forward(self, x: torch.Tensor) -> torch.Tensor: ...
-
-    @abstractmethod
-    def spline_forward(self, x: torch.Tensor) -> torch.Tensor: ...
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x_spline = x if self.spline_input_norm is None else self.spline_input_norm(x)
-
-        output = self.spline_forward(x_spline)
-
-        if self._use_residual_branch:
-            output += self.residual_forward(x)
-
-        if self.bias_output is not None:
-            output += self.bias_output
-
-        return output
-
     @property
     def weighted_coefficients(self) -> torch.Tensor:
         if self.weight_spline is not None:
@@ -99,6 +80,25 @@ class KANModule(torch.nn.Module, ABC):
                 torch.empty(self.coefficients.shape[:-1])
             )
 
+    @abstractmethod
+    def residual_forward(self, x: torch.Tensor) -> torch.Tensor: ...
+
+    @abstractmethod
+    def spline_forward(self, x: torch.Tensor) -> torch.Tensor: ...
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x_spline = x if self.spline_input_norm is None else self.spline_input_norm(x)
+
+        output = self.spline_forward(x_spline)
+
+        if self.weight_residual is not None:
+            output += self.residual_forward(x)
+
+        if self.bias_output is not None:
+            output += self.bias_output
+
+        return output
+
     @torch.no_grad
     def refine_grid(self, new_grid_size: int) -> None:
         basis_fine = self.basis_factory(
@@ -113,10 +113,6 @@ class KANModule(torch.nn.Module, ABC):
 
         self.basis = basis_fine
         self.weighted_coefficients = coeff_fine.movedim(-2, self.in_feature_dim)
-
-    @property
-    def _use_residual_branch(self) -> bool:
-        return self.weight_residual is not None
 
     def _add_parameter(self, name: str, shape: tuple[int, ...]) -> None:
         spec = getattr(self.param_specs, name)

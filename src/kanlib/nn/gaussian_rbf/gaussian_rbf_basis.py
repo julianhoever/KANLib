@@ -28,8 +28,7 @@ class GaussianRbfBasis(SplineBasis):
         return self.grid_size + _APPROXIMATED_BSPLINE_ORDER
 
     def _perform_forward(self, x: torch.Tensor) -> torch.Tensor:
-        distance = x.unsqueeze(dim=-1) - self.grid
-        return torch.exp(-1.0 * (self.epsilon * distance) ** 2)
+        return _compute_grbf_basis(x=x, grid=self.grid, epsilon=self.epsilon)
 
 
 def _initialize_grid(grid_size: int, spline_range: torch.Tensor) -> torch.Tensor:
@@ -42,3 +41,10 @@ def _initialize_grid(grid_size: int, spline_range: torch.Tensor) -> torch.Tensor
         dtype=torch.get_default_dtype(),
     ).repeat(spline_range.shape[0], 1)
     return grid * scale + smin
+
+
+def _compute_grbf_basis(
+    x: torch.Tensor, grid: torch.Tensor, epsilon: torch.Tensor
+) -> torch.Tensor:
+    distance = x.unsqueeze(dim=-1) - grid
+    return torch.exp(-1.0 * (epsilon * distance) ** 2)

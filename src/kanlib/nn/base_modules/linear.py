@@ -19,7 +19,7 @@ class LinearBase(KANModule):
         spline_range: tuple[float, float] | torch.Tensor,
         basis_factory: BasisFactory,
         use_output_bias: bool,
-        use_layer_norm: bool,
+        normalize_spline_inputs: bool,
         use_residual_branch: bool,
         use_spline_weight: bool,
         init_coeff_std: float = 0.1,
@@ -41,18 +41,20 @@ class LinearBase(KANModule):
             grid_size=grid_size,
             spline_range=spline_range,
             basis_factory=basis_factory,
+            spline_input_norm=torch.nn.LayerNorm(
+                normalized_shape=in_features, elementwise_affine=False, bias=False
+            )
+            if normalize_spline_inputs
+            else None,
         )
         self.in_features = in_features
         self.out_features = out_features
-        self.layer_norm = torch.nn.LayerNorm(in_features) if use_layer_norm else None
 
     def residual_forward(self, x: torch.Tensor) -> torch.Tensor:
         assert self.weight_residual is not None
         return linear(silu(x), self.weight_residual)
 
     def spline_forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.layer_norm is not None:
-            x = self.layer_norm(x)
         basis: torch.Tensor = self.basis(x).flatten(start_dim=-2)
         spline = linear(basis, self.weighted_coefficients.flatten(start_dim=-2))
         return spline

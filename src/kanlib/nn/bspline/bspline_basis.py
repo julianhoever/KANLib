@@ -25,6 +25,12 @@ class BSplineBasis(SplineBasis):
             raise ValueError("`grid_size` must be at least 1")
 
     @property
+    def spline_range(self) -> torch.Tensor:
+        _, grid_points = self.grid.shape
+        trimmed_grid = self.grid[:, self.spline_order : grid_points - self.spline_order]
+        return trimmed_grid[:, [0, -1]]
+
+    @property
     def num_basis_functions(self) -> int:
         return self.grid_size + self.spline_order
 

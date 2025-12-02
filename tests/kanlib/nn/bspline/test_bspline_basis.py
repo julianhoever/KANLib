@@ -48,6 +48,22 @@ def test_raises_error_on_invalid_grid_size(grid_size: int) -> None:
         )
 
 
+def test_spline_range_for_unmodified_grid(basis: BSplineBasis) -> None:
+    assert_close(
+        actual=basis.spline_range,
+        expected=torch.tensor([[-1.0, 1.0]] * basis.num_features),
+    )
+
+
+def test_spline_range_adapts_to_grid_changes(basis: BSplineBasis) -> None:
+    factor = torch.arange(2, 2 + len(basis.grid)).unsqueeze(dim=-1)
+    basis.grid = basis.grid * factor
+    assert_close(
+        actual=basis.spline_range,
+        expected=torch.tensor([[-1.0, 1.0]] * basis.num_features) * factor,
+    )
+
+
 def test_number_of_basis_functions(basis: BSplineBasis) -> None:
     assert basis.num_basis_functions == basis.grid_size + basis.spline_order
 

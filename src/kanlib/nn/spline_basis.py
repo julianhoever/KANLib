@@ -47,3 +47,7 @@ class SplineBasis(torch.nn.Module, ABC):
                 f"Expected {self.num_features} features, but got {x.shape[-1]}."
             )
         return self._perform_forward(x)
+
+
+class AdaptiveGrid(ABC):
+    def update_grid(self, x: torch.Tensor) -> None: ...

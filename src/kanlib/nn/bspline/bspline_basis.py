@@ -2,10 +2,10 @@ from functools import partial
 
 import torch
 
-from kanlib.nn.spline_basis import SplineBasis
+from kanlib.nn.spline_basis import AdaptiveGrid, SplineBasis
 
 
-class BSplineBasis(SplineBasis):
+class BSplineBasis(SplineBasis, AdaptiveGrid):
     def __init__(
         self, grid_size: int, spline_range: torch.Tensor, spline_order: int
     ) -> None:
@@ -38,6 +38,9 @@ class BSplineBasis(SplineBasis):
         return _compute_bspline_basis(
             x=x, grid=self.grid, spline_order=self.spline_order
         )
+
+    def update_grid(self, x: torch.Tensor) -> None:
+        raise NotImplementedError()
 
 
 def _initialize_grid(

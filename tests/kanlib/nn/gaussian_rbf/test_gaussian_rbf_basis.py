@@ -7,7 +7,9 @@ from kanlib.nn.gaussian_rbf.gaussian_rbf_basis import GaussianRbfBasis
 
 @pytest.fixture
 def rbf() -> GaussianRbfBasis:
-    return GaussianRbfBasis(grid_size=3, spline_range=torch.tensor([[-1.0, 1.0]]))
+    return GaussianRbfBasis(
+        grid_size=3, spline_range=torch.tensor([[-1.0, 1.0], [-1.0, 1.0]])
+    )
 
 
 def test_grid_has_two_dimensions(rbf: GaussianRbfBasis) -> None:
@@ -39,13 +41,3 @@ def test_grid_oversample_is_equal(rbf: GaussianRbfBasis) -> None:
 )
 def test_forward_returns_correct_shape(rbf: GaussianRbfBasis, x: torch.Tensor) -> None:
     assert rbf(x).shape == (*x.shape, rbf.num_basis_functions)
-
-
-@pytest.mark.parametrize("input_shape", [(1,), (3,), (2, 3), (2, 3, 1), (2, 3, 4, 5)])
-def test_forward_works_on_every_input_for_single_feature(
-    input_shape: tuple[int, ...],
-) -> None:
-    basis = GaussianRbfBasis(grid_size=10, spline_range=torch.tensor([[-1.0, 1.0]]))
-    inputs = torch.empty(*input_shape)
-    outputs = basis(inputs)
-    assert outputs.shape == (*inputs.shape, basis.num_basis_functions)

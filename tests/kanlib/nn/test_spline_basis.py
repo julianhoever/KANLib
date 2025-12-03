@@ -4,7 +4,7 @@ from typing import Optional
 import pytest
 import torch
 
-from kanlib.nn.spline_basis import SplineBasis
+from kanlib.nn.spline_basis import AdaptiveGrid, SplineBasis
 
 
 class SplineBasisImpl(SplineBasis):
@@ -25,7 +25,12 @@ class SplineBasisImpl(SplineBasis):
     def num_basis_functions(self) -> int:
         raise NotImplementedError()
 
-    def _perform_forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        raise NotImplementedError()
+
+
+class AdaptiveSplineBasisImpl(SplineBasisImpl, AdaptiveGrid):
+    def update_grid(self, x: torch.Tensor) -> None:
         raise NotImplementedError()
 
 
@@ -87,15 +92,11 @@ def test_forward_not_raises_error_on_valid_number_of_features(
         _ = spline_basis(inputs)
 
 
-@pytest.mark.parametrize(
-    "input_shape",
-    argvalues=[(5,), (5, 4), (5, 4, 3)],
-    ids=["1d-input", "2d-input", "3d-input"],
-)
-def test_forward_not_raises_error_on_unfeatured_input_for_single_feature(
-    input_shape: tuple[int, ...],
+@pytest.mark.parametrize("input_features", [2, 5])
+def test_update_grid_raises_error_if_number_of_features_not_match(
+    input_features: int,
 ) -> None:
-    spline_basis = SplineBasisImpl(spline_range=torch.empty(1, 2))
-    inputs = torch.empty(*input_shape)
-    with pytest.raises(NotImplementedError):
-        _ = spline_basis(inputs)
+    spline_basis = AdaptiveSplineBasisImpl(spline_range=torch.empty(3, 2))
+    inputs = torch.ones(input_features)
+    with pytest.raises(ValueError):
+        _ = spline_basis.update_grid(inputs)

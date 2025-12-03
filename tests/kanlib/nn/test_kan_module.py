@@ -22,7 +22,7 @@ class DummyBasis(SplineBasis):
     def num_basis_functions(self) -> int:
         return self.grid_size
 
-    def _perform_forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError()
 
 

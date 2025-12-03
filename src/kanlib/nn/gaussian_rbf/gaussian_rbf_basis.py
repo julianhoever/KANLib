@@ -27,7 +27,7 @@ class GaussianRbfBasis(SplineBasis):
     def num_basis_functions(self) -> int:
         return self.grid_size + _APPROXIMATED_BSPLINE_ORDER
 
-    def _perform_forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return _compute_grbf_basis(x=x, grid=self.grid, epsilon=self.epsilon)
 
 

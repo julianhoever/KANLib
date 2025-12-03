@@ -34,7 +34,7 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
     def num_basis_functions(self) -> int:
         return self.grid_size + self.spline_order
 
-    def _perform_forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return _compute_bspline_basis(
             x=x, grid=self.grid, spline_order=self.spline_order
         )

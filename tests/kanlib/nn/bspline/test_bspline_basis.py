@@ -123,14 +123,3 @@ def test_bspline_basis_is_equivalent_to_scipy(basis: BSplineBasis) -> None:
             actual_outputs = outputs[:, feat_idx, base_idx]
             assert_close(actual_outputs, reference_outputs)
 
-
-@pytest.mark.parametrize("input_shape", [(1,), (3,), (2, 3), (2, 3, 1), (2, 3, 4, 5)])
-def test_forward_works_on_every_input_for_single_feature(
-    input_shape: tuple[int, ...],
-) -> None:
-    basis = BSplineBasis(
-        grid_size=10, spline_range=torch.tensor([[-1.0, 1.0]]), spline_order=3
-    )
-    inputs = torch.empty(*input_shape)
-    outputs = basis(inputs)
-    assert outputs.shape == (*inputs.shape, basis.num_basis_functions)

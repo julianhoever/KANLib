@@ -1,10 +1,32 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from typing import Any, Protocol, Self
 
 import torch
 
 
+class _InputFunc[S, R](Protocol):
+    def __call__(_: Self, self: S, x: torch.Tensor) -> R: ...  # pyright: ignore[reportSelfClsParameterName]
+
+
+def _validate_basis_inputs[S: Any, R: Any](
+    func: _InputFunc[S, R],
+) -> _InputFunc[S, R]:
+    def wrapper(self: S, x: torch.Tensor) -> R:
+        if x.shape[-1] != self.num_features:
+            raise ValueError(
+                f"Expected {self.num_features} features, but got {x.shape[-1]}."
+            )
+        return func(self, x)
+
+    return wrapper
+
+
 class SplineBasis(torch.nn.Module, ABC):
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        cls.forward = _validate_basis_inputs(cls.forward)
+
     def __init__(
         self,
         grid_size: int,
@@ -39,15 +61,13 @@ class SplineBasis(torch.nn.Module, ABC):
     def num_basis_functions(self) -> int: ...
 
     @abstractmethod
-    def _perform_forward(self, x: torch.Tensor) -> torch.Tensor: ...
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.num_features != 1 and x.shape[-1] != self.num_features:
-            raise ValueError(
-                f"Expected {self.num_features} features, but got {x.shape[-1]}."
-            )
-        return self._perform_forward(x)
+    def forward(self, x: torch.Tensor) -> torch.Tensor: ...
 
 
 class AdaptiveGrid(ABC):
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        cls.update_grid = _validate_basis_inputs(cls.update_grid)
+
+    @abstractmethod
     def update_grid(self, x: torch.Tensor) -> None: ...

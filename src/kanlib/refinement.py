@@ -6,7 +6,7 @@ from kanlib.nn.spline_basis import SplineBasis
 def compute_refined_coefficients(
     basis_coarse: SplineBasis, basis_fine: SplineBasis, coeff_coarse: torch.Tensor
 ) -> torch.Tensor:
-    if basis_fine.grid_size <= basis_coarse.grid_size:
+    if basis_fine.grid_size < basis_coarse.grid_size:
         raise ValueError("Finer grid size must be larger than the coarse grid size.")
 
     if basis_coarse.num_features != basis_fine.num_features:

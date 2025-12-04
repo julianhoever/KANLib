@@ -33,7 +33,7 @@ class TestComputeRefinedCoefficients:
             1, coarse_grid_size + spline_order + 1, dtype=torch.get_default_dtype()
         ).repeat(*range(1, ndim - 2), num_features, 1)
 
-    @pytest.fixture(params=[10, 15, 20])
+    @pytest.fixture(params=[5, 10, 15, 20])
     def fine_grid_size(self, request: pytest.FixtureRequest) -> int:
         return request.param
 

@@ -123,3 +123,27 @@ def test_bspline_basis_is_equivalent_to_scipy(basis: BSplineBasis) -> None:
             actual_outputs = outputs[:, feat_idx, base_idx]
             assert_close(actual_outputs, reference_outputs)
 
+
+@pytest.mark.parametrize("grid_size", [1, 2, 3])
+def test_update_grid_changes_spline_range(grid_size: int) -> None:
+    spline_range = torch.tensor([[-1, 1]] * 2)
+    inputs = torch.tensor([[1.0, -5.0], [2.0, 1.0], [3.0, -2.0], [4.0, -4.0]])
+    target_spline_range = torch.tensor([[1.0, 4.0], [-5.0, 1.0]])
+
+    basis = BSplineBasis(grid_size=grid_size, spline_range=spline_range, spline_order=3)
+    basis.update_grid(inputs)
+
+    assert (basis.spline_range == target_spline_range).all()
+
+
+@pytest.mark.parametrize("grid_size", [1, 2, 3])
+def test_update_grid_does_not_change_grid_shape(grid_size: int) -> None:
+    basis = BSplineBasis(
+        grid_size=grid_size, spline_range=torch.tensor([[-1, 1]] * 2), spline_order=3
+    )
+    initial_grid_shape = basis.grid.shape
+
+    inputs = torch.empty(100, 2)
+    basis.update_grid(inputs)
+
+    assert basis.grid.shape == initial_grid_shape

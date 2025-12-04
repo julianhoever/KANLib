@@ -1,4 +1,5 @@
 from functools import partial
+from typing import Any
 
 import torch
 
@@ -39,8 +40,44 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
             x=x, grid=self.grid, spline_order=self.spline_order
         )
 
-    def update_grid(self, x: torch.Tensor) -> None:
-        raise NotImplementedError()
+    @torch.no_grad
+    def update_grid(
+        self, x: torch.Tensor, margin: float = 0.0, uniform_fraction: float = 0.02
+    ) -> None:
+        """
+        Implementation is based on:
+        https://github.com/Blealtan/efficient-kan/blob/7b6ce1c87f18c8bc90c208f6b494042344216b11/src/efficient_kan/kan.py#L169-L215
+        """
+
+        def arange(*args: Any) -> torch.Tensor:
+            values = torch.arange(*args, dtype=torch.get_default_dtype())
+            return values.unsqueeze(dim=-1)
+
+        x_flat = x.view(-1, self.num_features)
+        x_sorted = torch.sort(x_flat, dim=0)[0]
+
+        grid_sampling_mask = torch.linspace(
+            start=0, end=len(x_sorted) - 1, steps=self.grid_size + 1, dtype=torch.int64
+        )
+        grid_adaptive = x_sorted[grid_sampling_mask]
+
+        min_value = x_sorted[0] - margin
+        max_value = x_sorted[-1] + margin
+        step_size = (max_value - min_value) / self.grid_size
+
+        grid_uniform = arange(self.grid_size + 1) * step_size + min_value
+
+        grid = uniform_fraction * grid_uniform + (1 - uniform_fraction) * grid_adaptive
+        grid = torch.cat(
+            [
+                grid[:1] - step_size * arange(self.spline_order, 0, -1),
+                grid,
+                grid[-1:] + step_size * arange(1, self.spline_order + 1),
+            ],
+            dim=0,
+        )
+
+        self.grid = grid.T
 
 
 def _initialize_grid(

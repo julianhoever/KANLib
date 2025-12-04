@@ -5,19 +5,19 @@ from typing import Any, Protocol, Self
 import torch
 
 
-class _InputFunc[S, R](Protocol):
-    def __call__(_: Self, self: S, x: torch.Tensor) -> R: ...  # pyright: ignore[reportSelfClsParameterName]
+class _InputValidatedFunc[S, R](Protocol):
+    def __call__(_: Self, self: S, x: torch.Tensor, *args: Any, **kwargs: Any) -> R: ...  # pyright: ignore[reportSelfClsParameterName]
 
 
 def _validate_basis_inputs[S: Any, R: Any](
-    func: _InputFunc[S, R],
-) -> _InputFunc[S, R]:
-    def wrapper(self: S, x: torch.Tensor) -> R:
+    func: _InputValidatedFunc[S, R],
+) -> _InputValidatedFunc[S, R]:
+    def wrapper(self: S, x: torch.Tensor, *args: Any, **kwargs: Any) -> R:
         if x.shape[-1] != self.num_features:
             raise ValueError(
                 f"Expected {self.num_features} features, but got {x.shape[-1]}."
             )
-        return func(self, x)
+        return func(self, x, *args, **kwargs)
 
     return wrapper
 

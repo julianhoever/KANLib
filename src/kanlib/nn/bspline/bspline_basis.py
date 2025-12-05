@@ -42,7 +42,7 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
 
     @torch.no_grad
     def update_grid(
-        self, x: torch.Tensor, margin: float = 0.0, uniform_fraction: float = 0.02
+        self, x: torch.Tensor, margin: float = 0.01, uniform_fraction: float = 0.02
     ) -> None:
         """
         Implementation is based on:

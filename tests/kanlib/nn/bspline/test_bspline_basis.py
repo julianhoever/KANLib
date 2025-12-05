@@ -1,9 +1,8 @@
 import pytest
 import torch
+from kanlib.nn.bspline.bspline_basis import BSplineBasis
 from scipy.interpolate import BSpline
 from torch.testing import assert_close
-
-from kanlib.nn.bspline.bspline_basis import BSplineBasis
 
 
 def reference_bspline_basis(
@@ -131,7 +130,7 @@ def test_update_grid_changes_spline_range(grid_size: int) -> None:
     target_spline_range = torch.tensor([[1.0, 4.0], [-5.0, 1.0]])
 
     basis = BSplineBasis(grid_size=grid_size, spline_range=spline_range, spline_order=3)
-    basis.update_grid(inputs)
+    basis.update_grid(inputs, margin=0.0)
 
     assert (basis.spline_range == target_spline_range).all()
 

@@ -21,7 +21,7 @@ class Linear(LinearBase):
         use_residual_branch: bool = True,
         use_spline_weight: bool = True,
         init_coeff_std: float = 0.1,
-        adaptive_grid_margin: float = 0.0,
+        adaptive_grid_margin: float = 0.01,
         adaptive_grid_uniform_fraction: float = 0.02,
     ) -> None:
         super().__init__(
@@ -37,7 +37,7 @@ class Linear(LinearBase):
                 uniform_fraction=adaptive_grid_uniform_fraction,
             )
             if use_adaptive_grid
-            else dict(),
+            else None,
             use_residual_branch=use_residual_branch,
             use_spline_weight=use_spline_weight,
             init_coeff_std=init_coeff_std,

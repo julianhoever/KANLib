@@ -15,7 +15,7 @@ class DummyBasis(SplineBasis):
         super().__init__(
             grid_size=grid_size,
             spline_range=spline_range,
-            initialize_grid=lambda: torch.empty(*spline_range.shape[:-1], 10),
+            initialize_grid=lambda: torch.empty(spline_range.shape[0], grid_size),
         )
 
     @property
@@ -23,7 +23,7 @@ class DummyBasis(SplineBasis):
         return self.grid_size
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError()
+        return torch.ones(*x.shape, self.num_basis_functions)
 
 
 class KANModuleImpl(KANModule):
@@ -39,7 +39,7 @@ class KANModuleImpl(KANModule):
                 bias_output=ParamSpec(init_zeros),
             ),
             grid_size=5,
-            spline_range=torch.tensor([[-1, 1]]),
+            spline_range=torch.tensor([[-1, 1]] * 4),
             basis_factory=DummyBasis,
             spline_input_norm=None,
         )
@@ -120,3 +120,10 @@ def test_weighted_spline_kan_set_weighted_coefficient_resets_weight_spline_to_on
     kan_with_spline_weight.weighted_coefficients = target_coefficient
     assert_close(kan_with_spline_weight.coefficients, target_coefficient)
     assert_close(kan_with_spline_weight.weight_spline, target_weight)
+
+
+def test_refine_to_larger_grid_size(kan_with_spline_weight: KANModule) -> None:
+    kan_with_spline_weight.refine_grid(new_grid_size=8)
+    assert kan_with_spline_weight.basis.grid_size == 8
+    assert kan_with_spline_weight.basis.num_basis_functions == 8
+    assert kan_with_spline_weight.coefficients.shape == (3, 4, 8)

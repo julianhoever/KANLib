@@ -5,7 +5,7 @@ from typing import Optional, Protocol, cast
 
 import torch
 
-from kanlib.refinement import compute_refined_coefficients
+from kanlib.compute_coefficients import compute_coefficients
 
 from .spline_basis import SplineBasis
 
@@ -105,10 +105,12 @@ class KANModule(torch.nn.Module, ABC):
             grid_size=new_grid_size, spline_range=self.basis.spline_range
         ).to(self.basis.grid.device)
 
-        coeff_fine = compute_refined_coefficients(
-            basis_coarse=self.basis,
-            basis_fine=basis_fine,
-            coeff_coarse=self.weighted_coefficients.movedim(self.in_feature_dim, -2),
+        coeff_fine = compute_coefficients(
+            original_coefficients=self.weighted_coefficients.movedim(
+                self.in_feature_dim, -2
+            ),
+            original_basis_values=self.basis(basis_fine.grid.t()),
+            target_basis_values=basis_fine(basis_fine.grid.t()),
         )
 
         self.basis = basis_fine

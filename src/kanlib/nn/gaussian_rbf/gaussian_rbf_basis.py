@@ -39,6 +39,7 @@ def _initialize_grid(grid_size: int, spline_range: torch.Tensor) -> torch.Tensor
         end=grid_size + _APPROXIMATED_BSPLINE_ORDER / 2,
         steps=grid_size + _APPROXIMATED_BSPLINE_ORDER,
         dtype=torch.get_default_dtype(),
+        device=spline_range.device,
     ).repeat(spline_range.shape[0], 1)
     return grid * scale + smin
 

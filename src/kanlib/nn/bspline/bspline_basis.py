@@ -95,6 +95,7 @@ def _initialize_grid(
         start=-spline_order,
         end=grid_size + spline_order + 1,
         dtype=torch.get_default_dtype(),
+        device=spline_range.device,
     ).repeat(spline_range.shape[0], 1)
     return grid * scale + smin
 

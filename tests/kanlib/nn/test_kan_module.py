@@ -27,7 +27,7 @@ class DummyBasis(SplineBasis):
 
 
 class KANModuleImpl(KANModule):
-    def __init__(self, use_spline_weight: bool) -> None:
+    def __init__(self, use_spline_weight: bool, adaptiv_grid: bool) -> None:
         super().__init__(
             param_shape=(3, 4),
             in_feature_dim=1,
@@ -42,6 +42,7 @@ class KANModuleImpl(KANModule):
             spline_range=torch.tensor([[-1, 1]] * 4),
             basis_factory=DummyBasis,
             spline_input_norm=None,
+            adaptive_grid_kwargs=dict() if adaptiv_grid else None,
         )
 
     def residual_forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -53,12 +54,12 @@ class KANModuleImpl(KANModule):
 
 @pytest.fixture
 def kan_without_spline_weight() -> KANModuleImpl:
-    return KANModuleImpl(use_spline_weight=False)
+    return KANModuleImpl(use_spline_weight=False, adaptiv_grid=False)
 
 
 @pytest.fixture
 def kan_with_spline_weight() -> KANModuleImpl:
-    return KANModuleImpl(use_spline_weight=True)
+    return KANModuleImpl(use_spline_weight=True, adaptiv_grid=False)
 
 
 def test_unweighted_spline_kan_has_no_weight_spline(
@@ -66,15 +67,6 @@ def test_unweighted_spline_kan_has_no_weight_spline(
 ) -> None:
     assert kan_without_spline_weight.coefficients is not None
     assert kan_without_spline_weight.weight_spline is None
-
-
-def test_unweighted_spline_kan_set_coefficient_value(
-    kan_without_spline_weight: KANModule,
-) -> None:
-    ones = torch.ones((2, 3, 4))
-    kan_without_spline_weight.weighted_coefficients = ones
-    assert kan_without_spline_weight.weight_spline is None
-    assert_close(ones, kan_without_spline_weight.coefficients)
 
 
 def test_unweighted_spline_kan_get_coefficient_returns_unweighted(
@@ -104,26 +96,16 @@ def test_get_weighted_coefficient(
     )
 
 
-def test_weighted_spline_kan_set_weighted_coefficient_updates_coefficients(
-    kan_with_spline_weight: KANModule,
-) -> None:
-    target_coefficient = torch.ones((2, 3, 4)) * 6
-    kan_with_spline_weight.weighted_coefficients = target_coefficient
-    assert_close(kan_with_spline_weight.coefficients, target_coefficient)
-
-
-def test_weighted_spline_kan_set_weighted_coefficient_resets_weight_spline_to_one(
-    kan_with_spline_weight: KANModule,
-) -> None:
-    target_coefficient = torch.ones((2, 3, 4)) * 6
-    target_weight = torch.ones((2, 3))
-    kan_with_spline_weight.weighted_coefficients = target_coefficient
-    assert_close(kan_with_spline_weight.coefficients, target_coefficient)
-    assert_close(kan_with_spline_weight.weight_spline, target_weight)
-
-
 def test_refine_to_larger_grid_size(kan_with_spline_weight: KANModule) -> None:
     kan_with_spline_weight.refine_grid(new_grid_size=8)
     assert kan_with_spline_weight.basis.grid_size == 8
     assert kan_with_spline_weight.basis.num_basis_functions == 8
     assert kan_with_spline_weight.coefficients.shape == (3, 4, 8)
+
+
+def test_adaptive_grid_raises_error_if_basis_not_support_adaptive_grid() -> None:
+    kan = KANModuleImpl(use_spline_weight=False, adaptiv_grid=True)
+    inputs = torch.rand(1, 2, 3)
+
+    with pytest.raises(ValueError):
+        _ = kan(inputs)

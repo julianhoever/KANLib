@@ -66,7 +66,7 @@ def linear(
         out_features=out_features,
         spline_order=3,
         grid_size=grid_size,
-        normalize_spline_inputs=normalize_spline_inputs,
+        use_spline_input_norm=normalize_spline_inputs,
         use_residual_branch=use_residual_branch,
         use_spline_weight=use_spline_weight,
     )

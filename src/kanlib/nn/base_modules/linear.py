@@ -1,4 +1,5 @@
 from functools import partial
+from typing import Any, Optional
 
 import torch
 from torch.nn.functional import linear, silu
@@ -19,7 +20,8 @@ class LinearBase(KANModule):
         spline_range: tuple[float, float] | torch.Tensor,
         basis_factory: BasisFactory,
         use_output_bias: bool,
-        normalize_spline_inputs: bool,
+        use_spline_input_norm: bool,
+        adaptive_grid_kwargs: Optional[dict[str, Any]],
         use_residual_branch: bool,
         use_spline_weight: bool,
         init_coeff_std: float = 0.1,
@@ -44,8 +46,9 @@ class LinearBase(KANModule):
             spline_input_norm=torch.nn.LayerNorm(
                 normalized_shape=in_features, elementwise_affine=False, bias=False
             )
-            if normalize_spline_inputs
+            if use_spline_input_norm
             else None,
+            adaptive_grid_kwargs=adaptive_grid_kwargs,
         )
         self.in_features = in_features
         self.out_features = out_features

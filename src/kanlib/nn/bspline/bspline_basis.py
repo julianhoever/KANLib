@@ -50,14 +50,20 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
         """
 
         def arange(*args: Any) -> torch.Tensor:
-            values = torch.arange(*args, dtype=torch.get_default_dtype())
+            values = torch.arange(
+                *args, dtype=torch.get_default_dtype(), device=self.grid.device
+            )
             return values.unsqueeze(dim=-1)
 
         x_flat = x.view(-1, self.num_features)
         x_sorted = torch.sort(x_flat, dim=0)[0]
 
         grid_sampling_mask = torch.linspace(
-            start=0, end=len(x_sorted) - 1, steps=self.grid_size + 1, dtype=torch.int64
+            start=0,
+            end=len(x_sorted) - 1,
+            steps=self.grid_size + 1,
+            dtype=torch.int64,
+            device=x.device,
         )
         grid_adaptive = x_sorted[grid_sampling_mask]
 

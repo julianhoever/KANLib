@@ -26,7 +26,6 @@ class Linear(LinearBase):
             basis_factory=GaussianRbfBasis,
             use_output_bias=use_output_bias,
             use_spline_input_norm=use_spline_input_norm,
-            adaptive_grid_kwargs=None,
             use_residual_branch=use_residual_branch,
             use_spline_weight=use_spline_weight,
             init_coeff_std=init_coeff_std,

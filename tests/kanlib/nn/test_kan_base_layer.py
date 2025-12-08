@@ -26,7 +26,7 @@ class DummyBasis(SplineBasis):
 
 
 class KANBaseLayerImpl(KANBaseLayer):
-    def __init__(self, use_spline_weight: bool, adaptiv_grid: bool) -> None:
+    def __init__(self, use_spline_weight: bool) -> None:
         super().__init__(
             param_shape=(3, 4),
             in_feature_dim=1,
@@ -41,7 +41,6 @@ class KANBaseLayerImpl(KANBaseLayer):
             spline_range=torch.tensor([[-1, 1]] * 4),
             basis_factory=DummyBasis,
             spline_input_norm=None,
-            adaptive_grid_kwargs=dict() if adaptiv_grid else None,
         )
 
     def residual_forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -53,12 +52,12 @@ class KANBaseLayerImpl(KANBaseLayer):
 
 @pytest.fixture
 def kan_without_spline_weight() -> KANBaseLayerImpl:
-    return KANBaseLayerImpl(use_spline_weight=False, adaptiv_grid=False)
+    return KANBaseLayerImpl(use_spline_weight=False)
 
 
 @pytest.fixture
 def kan_with_spline_weight() -> KANBaseLayerImpl:
-    return KANBaseLayerImpl(use_spline_weight=True, adaptiv_grid=False)
+    return KANBaseLayerImpl(use_spline_weight=True)
 
 
 def test_unweighted_spline_kan_has_no_weight_spline(
@@ -103,7 +102,7 @@ def test_refine_to_larger_grid_size(kan_with_spline_weight: KANBaseLayer) -> Non
 
 
 def test_adaptive_grid_raises_error_if_basis_not_support_adaptive_grid() -> None:
-    kan = KANBaseLayerImpl(use_spline_weight=False, adaptiv_grid=True)
+    kan = KANBaseLayerImpl(use_spline_weight=False)
     inputs = torch.rand(1, 2, 3)
 
     with pytest.raises(ValueError):

@@ -8,7 +8,12 @@ from kanlib.nn.spline_basis import AdaptiveGrid, SplineBasis
 
 class BSplineBasis(SplineBasis, AdaptiveGrid):
     def __init__(
-        self, grid_size: int, spline_range: torch.Tensor, spline_order: int
+        self,
+        grid_size: int,
+        spline_range: torch.Tensor,
+        spline_order: int,
+        adaptive_grid_margin: float = 0.01,
+        adaptive_grid_uniform_fraction: float = 0.02,
     ) -> None:
         super().__init__(
             grid_size=grid_size,
@@ -21,6 +26,8 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
             ),
         )
         self.spline_order = spline_order
+        self.margin = adaptive_grid_margin
+        self.uniform_fraction = adaptive_grid_uniform_fraction
 
         if self.grid_size < 1:
             raise ValueError("`grid_size` must be at least 1")
@@ -45,9 +52,7 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
         )
 
     @torch.no_grad
-    def updated_grid_from_samples(
-        self, x: torch.Tensor, margin: float = 0.01, uniform_fraction: float = 0.02
-    ) -> torch.Tensor:
+    def updated_grid_from_samples(self, x: torch.Tensor) -> torch.Tensor:
         """
         Implementation is based on:
         https://github.com/Blealtan/efficient-kan/blob/7b6ce1c87f18c8bc90c208f6b494042344216b11/src/efficient_kan/kan.py#L169-L215
@@ -71,13 +76,16 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
         )
         grid_adaptive = x_sorted[grid_sampling_mask]
 
-        min_value = x_sorted[0] - margin
-        max_value = x_sorted[-1] + margin
+        min_value = x_sorted[0] - self.margin
+        max_value = x_sorted[-1] + self.margin
         step_size = (max_value - min_value) / self.grid_size
 
         grid_uniform = arange(self.grid_size + 1) * step_size + min_value
 
-        grid = uniform_fraction * grid_uniform + (1 - uniform_fraction) * grid_adaptive
+        grid = (
+            self.uniform_fraction * grid_uniform
+            + (1 - self.uniform_fraction) * grid_adaptive
+        )
         grid = torch.cat(
             [
                 grid[:1] - step_size * arange(self.spline_order, 0, -1),

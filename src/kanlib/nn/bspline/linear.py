@@ -17,7 +17,6 @@ class Linear(LinearBase):
         spline_range: tuple[float, float] | torch.Tensor = (-1.0, 1.0),
         use_output_bias: bool = False,
         use_spline_input_norm: bool = False,
-        use_adaptive_grid: bool = True,
         use_residual_branch: bool = True,
         use_spline_weight: bool = True,
         init_coeff_std: float = 0.1,
@@ -29,15 +28,14 @@ class Linear(LinearBase):
             out_features=out_features,
             grid_size=grid_size,
             spline_range=spline_range,
-            basis_factory=partial(BSplineBasis, spline_order=spline_order),
+            basis_factory=partial(
+                BSplineBasis,
+                spline_order=spline_order,
+                adaptive_grid_margin=adaptive_grid_margin,
+                adaptive_grid_uniform_fraction=adaptive_grid_uniform_fraction,
+            ),
             use_output_bias=use_output_bias,
             use_spline_input_norm=use_spline_input_norm,
-            adaptive_grid_kwargs=dict(
-                margin=adaptive_grid_margin,
-                uniform_fraction=adaptive_grid_uniform_fraction,
-            )
-            if use_adaptive_grid
-            else None,
             use_residual_branch=use_residual_branch,
             use_spline_weight=use_spline_weight,
             init_coeff_std=init_coeff_std,

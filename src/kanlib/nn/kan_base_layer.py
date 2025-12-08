@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Optional, Protocol, cast
+from typing import Optional, Protocol
 
 import torch
 
@@ -39,7 +39,6 @@ class KANBaseLayer(torch.nn.Module, ABC):
         spline_range: tuple[float, float] | torch.Tensor,
         basis_factory: BasisFactory,
         spline_input_norm: Optional[torch.nn.LayerNorm],
-        adaptive_grid_kwargs: Optional[dict[str, Any]],
     ) -> None:
         super().__init__()
         self.in_feature_dim = in_feature_dim
@@ -53,7 +52,6 @@ class KANBaseLayer(torch.nn.Module, ABC):
         self.basis_factory = basis_factory
         self.param_specs = param_specs
         self.spline_input_norm = spline_input_norm
-        self.adaptive_grid_kwargs = adaptive_grid_kwargs
 
         self.coefficients: torch.nn.Parameter
         self.weight_spline: torch.nn.Parameter | None
@@ -114,10 +112,7 @@ class KANBaseLayer(torch.nn.Module, ABC):
                 f"{type(self.basis).__name__} does not support adaptive grid."
             )
 
-        assert self.adaptive_grid_kwargs is not None
-        kwargs = cast(dict[str, Any], self.adaptive_grid_kwargs)
-
-        new_grid = self.basis.updated_grid_from_samples(x, **kwargs)
+        new_grid = self.basis.updated_grid_from_samples(x)
 
         try:
             new_coeff = compute_coefficients(
@@ -128,7 +123,7 @@ class KANBaseLayer(torch.nn.Module, ABC):
                 target_basis_values=self.basis(x, grid=new_grid),
             )
         except RuntimeError:
-            print("[!] LSTSQ failed.")
+            pass
         else:
             self.basis.set_grid(new_grid)
             self.coefficients.data = new_coeff.movedim(-2, self.in_feature_dim)

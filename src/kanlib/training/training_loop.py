@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from functools import partial
-from typing import Any
+from typing import Any, Optional
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -8,6 +8,8 @@ from tqdm import tqdm
 
 from .history import History
 from .model_checkpoint import ModelCheckpoint
+
+type OnEpochStartsHook = Callable[[int, torch.nn.Module], None]
 
 
 def train(
@@ -24,6 +26,7 @@ def train(
     num_workers: int = 0,
     pin_memory: bool = False,
     persistent_workers: bool = False,
+    on_epoch_starts: Optional[OnEpochStartsHook] = None,
 ) -> History:
     dataloader = partial(
         DataLoader,
@@ -43,6 +46,10 @@ def train(
     with tqdm(total=epochs) as pbar:
         for epoch in range(1, epochs + 1):
             model.train()
+
+            if on_epoch_starts is not None:
+                on_epoch_starts(epoch, model)
+
             running_loss = 0.0
 
             for samples, labels in dl_train:

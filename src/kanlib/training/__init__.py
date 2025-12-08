@@ -1,4 +1,4 @@
 from .history import History
-from .training_loop import train
+from .kan_training_loop import train
 
 __all__ = ["History", "train"]

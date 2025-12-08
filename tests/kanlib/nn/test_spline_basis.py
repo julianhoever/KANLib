@@ -3,7 +3,6 @@ from typing import Optional
 
 import pytest
 import torch
-
 from kanlib.nn.spline_basis import AdaptiveGrid, SplineBasis
 
 
@@ -30,7 +29,7 @@ class SplineBasisImpl(SplineBasis):
 
 
 class AdaptiveSplineBasisImpl(SplineBasisImpl, AdaptiveGrid):
-    def update_grid(self, x: torch.Tensor) -> None:
+    def updated_grid_from_samples(self, x: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError()
 
 
@@ -93,10 +92,10 @@ def test_forward_not_raises_error_on_valid_number_of_features(
 
 
 @pytest.mark.parametrize("input_features", [2, 5])
-def test_update_grid_raises_error_if_number_of_features_not_match(
+def test_updated_grid_raises_error_if_number_of_features_not_match(
     input_features: int,
 ) -> None:
     spline_basis = AdaptiveSplineBasisImpl(spline_range=torch.empty(3, 2))
     inputs = torch.ones(input_features)
     with pytest.raises(ValueError):
-        _ = spline_basis.update_grid(inputs)
+        _ = spline_basis.updated_grid_from_samples(inputs)

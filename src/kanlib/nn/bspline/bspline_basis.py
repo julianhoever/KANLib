@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any
+from typing import Any, Optional
 
 import torch
 
@@ -35,15 +35,19 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
     def num_basis_functions(self) -> int:
         return self.grid_size + self.spline_order
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, grid: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         return _compute_bspline_basis(
-            x=x, grid=self.grid, spline_order=self.spline_order
+            x=x,
+            grid=self.grid if grid is None else grid,
+            spline_order=self.spline_order,
         )
 
     @torch.no_grad
-    def update_grid(
+    def updated_grid_from_samples(
         self, x: torch.Tensor, margin: float = 0.01, uniform_fraction: float = 0.02
-    ) -> None:
+    ) -> torch.Tensor:
         """
         Implementation is based on:
         https://github.com/Blealtan/efficient-kan/blob/7b6ce1c87f18c8bc90c208f6b494042344216b11/src/efficient_kan/kan.py#L169-L215
@@ -83,7 +87,7 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
             dim=0,
         )
 
-        self.grid = grid.T
+        return grid.T
 
 
 def _initialize_grid(

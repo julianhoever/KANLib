@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from typing import Any, Protocol, Self
+from typing import Any, Optional, Protocol, Self
 
 import torch
 
@@ -20,6 +20,11 @@ def _validate_basis_inputs[S: Any, R: Any](
         return func(self, x, *args, **kwargs)
 
     return wrapper
+
+
+def _validate_grid(grid: torch.Tensor, num_features: int) -> None:
+    if grid.ndim != 2 or grid.shape[0] != num_features:
+        raise ValueError("`grid` must be of shape `(num_features, num_grid_points)`")
 
 
 class SplineBasis(torch.nn.Module, ABC):
@@ -43,10 +48,7 @@ class SplineBasis(torch.nn.Module, ABC):
         self.grid: torch.Tensor
         self.register_buffer("grid", initialize_grid())
 
-        if self.grid.ndim != 2 or self.grid.shape[0] != spline_range.shape[0]:
-            raise ValueError(
-                "`grid` must be of shape `(num_features, num_grid_points)`"
-            )
+        _validate_grid(grid=self.grid, num_features=spline_range.shape[0])
 
     @property
     def spline_range(self) -> torch.Tensor:
@@ -65,9 +67,30 @@ class SplineBasis(torch.nn.Module, ABC):
 
 
 class AdaptiveGrid(ABC):
+    def __init__(self) -> None:
+        super().__init__()
+        self.grid: torch.Tensor
+
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
-        cls.update_grid = _validate_basis_inputs(cls.update_grid)
+        cls.updated_grid_from_samples = _validate_basis_inputs(
+            cls.updated_grid_from_samples
+        )
+
+    @property
+    @abstractmethod
+    def num_features(self) -> int: ...
 
     @abstractmethod
-    def update_grid(self, x: torch.Tensor, *args: Any, **kwargs: Any) -> None: ...
+    def forward(
+        self, x: torch.Tensor, grid: Optional[torch.Tensor]
+    ) -> torch.Tensor: ...
+
+    @abstractmethod
+    def updated_grid_from_samples(
+        self, x: torch.Tensor, *args: Any, **kwargs: Any
+    ) -> torch.Tensor: ...
+
+    def set_grid(self, grid: torch.Tensor) -> None:
+        _validate_grid(grid, self.num_features)
+        self.grid = grid

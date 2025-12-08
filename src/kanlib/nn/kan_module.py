@@ -104,17 +104,21 @@ class KANModule(torch.nn.Module, ABC):
         assert self.adaptive_grid_kwargs is not None
         kwargs = cast(dict[str, Any], self.adaptive_grid_kwargs)
 
-        original_basis_values = self.basis(x)
-        self.basis.update_grid(x, **kwargs)
-        target_basis_values = self.basis(x)
+        new_grid = self.basis.updated_grid_from_samples(x, **kwargs)
 
-        new_coeff = compute_coefficients(
-            original_coefficients=self.coefficients.movedim(self.in_feature_dim, -2),
-            original_basis_values=original_basis_values,
-            target_basis_values=target_basis_values,
-        )
-
-        self.coefficients.data = new_coeff
+        try:
+            new_coeff = compute_coefficients(
+                original_coefficients=self.coefficients.movedim(
+                    self.in_feature_dim, -2
+                ),
+                original_basis_values=self.basis(x),
+                target_basis_values=self.basis(x, grid=new_grid),
+            )
+        except RuntimeError:
+            print("[!] LSTSQ failed.")
+        else:
+            self.basis.set_grid(new_grid)
+            self.coefficients.data = new_coeff.movedim(-2, self.in_feature_dim)
 
     @torch.no_grad
     def refine_grid(self, new_grid_size: int) -> None:

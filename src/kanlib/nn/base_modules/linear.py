@@ -8,10 +8,15 @@ from torch.nn.init import ones_ as init_ones
 from torch.nn.init import xavier_uniform_ as init_xavier_uniform
 from torch.nn.init import zeros_ as init_zeros
 
-from kanlib.nn.kan_module import BasisFactory, KANModule, ModuleParamSpecs, ParamSpec
+from kanlib.nn.kan_base_layer import (
+    BasisFactory,
+    KANBaseLayer,
+    ModuleParamSpecs,
+    ParamSpec,
+)
 
 
-class LinearBase(KANModule):
+class LinearBase(KANBaseLayer):
     def __init__(
         self,
         in_features: int,

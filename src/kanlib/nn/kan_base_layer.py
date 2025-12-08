@@ -28,7 +28,7 @@ class BasisFactory(Protocol):
     def __call__(self, grid_size: int, spline_range: torch.Tensor) -> SplineBasis: ...
 
 
-class KANModule(torch.nn.Module, ABC):
+class KANBaseLayer(torch.nn.Module, ABC):
     def __init__(
         self,
         param_shape: tuple[int, ...],
@@ -81,8 +81,6 @@ class KANModule(torch.nn.Module, ABC):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x_spline = x if self.spline_input_norm is None else self.spline_input_norm(x)
-        if self.adaptive_grid_kwargs is not None and self.training:
-            self._update_grid(x_spline)
 
         output = self.spline_forward(x_spline)
 
@@ -95,7 +93,22 @@ class KANModule(torch.nn.Module, ABC):
         return output
 
     @torch.no_grad
-    def _update_grid(self, x: torch.Tensor) -> None:
+    def refine_grid(self, grid_size: int) -> None:
+        basis_fine = self.basis_factory(
+            grid_size=grid_size, spline_range=self.basis.spline_range
+        ).to(self.basis.grid.device)
+
+        coeff_fine = compute_coefficients(
+            original_coefficients=self.coefficients.movedim(self.in_feature_dim, -2),
+            original_basis_values=self.basis(basis_fine.grid.t()),
+            target_basis_values=basis_fine(basis_fine.grid.t()),
+        )
+
+        self.basis = basis_fine
+        self.coefficients.data = coeff_fine.movedim(-2, self.in_feature_dim)
+
+    @torch.no_grad
+    def update_grid(self, x: torch.Tensor) -> None:
         if not isinstance(self.basis, AdaptiveGrid):
             raise ValueError(
                 f"{type(self.basis).__name__} does not support adaptive grid."
@@ -119,21 +132,6 @@ class KANModule(torch.nn.Module, ABC):
         else:
             self.basis.set_grid(new_grid)
             self.coefficients.data = new_coeff.movedim(-2, self.in_feature_dim)
-
-    @torch.no_grad
-    def refine_grid(self, new_grid_size: int) -> None:
-        basis_fine = self.basis_factory(
-            grid_size=new_grid_size, spline_range=self.basis.spline_range
-        ).to(self.basis.grid.device)
-
-        coeff_fine = compute_coefficients(
-            original_coefficients=self.coefficients.movedim(self.in_feature_dim, -2),
-            original_basis_values=self.basis(basis_fine.grid.t()),
-            target_basis_values=basis_fine(basis_fine.grid.t()),
-        )
-
-        self.basis = basis_fine
-        self.coefficients.data = coeff_fine.movedim(-2, self.in_feature_dim)
 
     def _add_parameter(self, name: str, shape: tuple[int, ...]) -> None:
         spec = getattr(self.param_specs, name)

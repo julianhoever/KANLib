@@ -102,7 +102,7 @@ def train(
     return_checkpoints: bool = False,
 ) -> History | tuple[History, list[Checkpoint]]:
     if refine_grid_sizes is not None and len(refine_grid_sizes) > 0:
-        epochs = epochs // len(refine_grid_sizes)
+        epochs = epochs // (len(refine_grid_sizes) + 1)
 
     def update_grid_hook(epoch: int, m: torch.nn.Module) -> None:
         assert update_grid_every_nth_epochs is not None

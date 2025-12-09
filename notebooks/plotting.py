@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.15.2"
+__generated_with = "0.18.3"
 app = marimo.App(width="medium")
 
 
@@ -14,14 +14,13 @@ def _():
     from torch.utils.data import TensorDataset
 
     from kanlib.nn.bspline import Linear
-    from kanlib.spline_plotting import linear_spline_index, plot_spline
-    from kanlib.training.training_loop import train
-
+    from kanlib.spline_plotting import linear_spline, plot_spline
+    from kanlib.training import train
     return (
         Callable,
         Linear,
         TensorDataset,
-        linear_spline_index,
+        linear_spline,
         partial,
         plot_spline,
         plt,
@@ -67,8 +66,8 @@ def _(Linear, ds_train, ds_val, partial, torch, train):
         Linear,
         spline_order=3,
         grid_size=5,
-        grid_range=(-1, 1),
-        use_residual_branch=True,
+        spline_range=(-1, 1),
+        use_residual_branch=False,
         use_spline_weight=True,
     )
 
@@ -82,37 +81,34 @@ def _(Linear, ds_train, ds_val, partial, torch, train):
         model=model,
         ds_train=ds_train,
         ds_val=ds_val,
-        epochs=400,
-        batch_size=32,
+        epochs=300,
+        batch_size=64,
         loss_fn=torch.nn.MSELoss(),
         optimizer_cls=torch.optim.Adam,
-        optimizer_kwargs=dict(lr=1e-3),
+        optimizer_kwargs=dict(lr=1e-3, weight_decay=1e-4),
         load_best=False,
         device=torch.device("cpu"),
+        update_grid_every_nth_epochs=100,
     )
     _ = model.eval()
     return (model,)
 
 
 @app.cell
-def _(linear_spline_index, model, plot_spline, plt):
+def _(linear_spline, model, plot_spline, plt):
     fig, axs = plt.subplots(
         nrows=len(model),
-        ncols=max(l.in_features * l.out_features for l in model),
+        ncols=max(l.in_features for l in model),
         figsize=(10, 5),
-        sharey=True,
         tight_layout=True,
     )
 
     for layer_idx in range(len(model)):
         for out_idx in range(model[layer_idx].out_features):
             for in_idx in range(model[layer_idx].in_features):
-                spline_idx = linear_spline_index(model[layer_idx], in_idx, out_idx)
                 plot_spline(
-                    layer=model[layer_idx],
-                    spline_index=spline_idx,
-                    show_grid=True,
-                    ax=axs[layer_idx, spline_idx],
+                    spline_spec=linear_spline(model[layer_idx], in_idx, out_idx),
+                    ax=axs[layer_idx, in_idx],
                 )
 
     for ax in axs.flatten():

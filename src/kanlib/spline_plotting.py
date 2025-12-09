@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Optional, Protocol
 
 import matplotlib.pyplot as plt
@@ -10,53 +11,55 @@ from kanlib.nn.spline_basis import SplineBasis
 class _KanLayer(Protocol):
     basis: SplineBasis
     coefficients: torch.Tensor
+    weight_spline: Optional[torch.Tensor]
 
 
-class _LinearLayer(Protocol):
-    in_features: int
-    out_features: int
+@dataclass
+class _SplineSpec:
+    layer: _KanLayer
+    feature_dim: int
+    index: tuple[int, ...]
+
+
+def linear_spline(linear: _KanLayer, input_idx: int, output_idx: int) -> _SplineSpec:
+    return _SplineSpec(layer=linear, feature_dim=1, index=(output_idx, input_idx))
 
 
 def plot_spline(
-    layer: _KanLayer,
-    spline_index: int,
+    spline_spec: _SplineSpec,
     resolution: int = 1000,
-    show_grid: bool = False,
     alpha: float = 1.0,
     ax: Optional[Axes] = None,
 ) -> Axes:
-    basis = layer.basis
-    coefficient = layer.coefficients.view(-1, basis.num_basis_functions).detach()
-    x_spline = torch.linspace(*basis.spline_range, resolution)
-    y_spline = _compute_spline(layer.basis, coefficient[spline_index], x_spline)
+    x, y = _compute_spline(spline_spec, resolution)
 
     if ax is None:
         _, ax = plt.subplots()
-
-    ax.plot(x_spline, y_spline, alpha=alpha, zorder=1)
-
-    if show_grid:
-        x_grid = basis.grid[
-            (basis.grid >= basis.spline_range[0])
-            & (basis.grid <= basis.spline_range[1])
-        ]
-        y_grid = _compute_spline(layer.basis, coefficient[spline_index], x_grid)
-        ax.scatter(x_grid, y_grid, c="red", marker=".", alpha=alpha, zorder=2)
+    ax.plot(x, y, alpha=alpha, zorder=1)
 
     return ax
 
 
-def linear_spline_index(linear: _LinearLayer, input_idx: int, output_idx: int) -> int:
-    return output_idx * linear.in_features + input_idx
-
-
 def _compute_spline(
-    basis: SplineBasis, coefficient: torch.Tensor, inputs: torch.Tensor
-) -> torch.Tensor:
-    assert inputs.dim() == 1
-    assert coefficient.shape[-1] == basis.num_basis_functions
+    spline_spec: _SplineSpec, resolution: int
+) -> tuple[torch.Tensor, torch.Tensor]:
+    coeff = spline_spec.layer.coefficients.detach()
+    coeff_flat = coeff.movedim(spline_spec.feature_dim, -2)
+    coeff_flat = coeff_flat.view(-1, *coeff_flat.shape[-2:])
 
-    inputs = inputs.unsqueeze(dim=-1)
-    flat_coeff = coefficient.view(-1, basis.num_basis_functions)
-    flat_spline = torch.sum(basis(inputs) * flat_coeff, dim=-1).transpose(0, 1)
-    return flat_spline.view(*coefficient.shape[:-1], -1)
+    smin, smax = spline_spec.layer.basis.spline_range.unbind(dim=-1)
+    x_spline = torch.linspace(0, 1, resolution).unsqueeze(dim=-1) * (smax - smin) + smin
+
+    basis_values = spline_spec.layer.basis(x_spline).unsqueeze(dim=-3)
+
+    splines_flat = torch.sum(basis_values * coeff_flat, dim=-1)
+    splines = splines_flat.movedim(-2, spline_spec.feature_dim)
+    splines = splines.view(-1, *coeff.shape[:-1])
+
+    if spline_spec.layer.weight_spline is not None:
+        splines = splines * spline_spec.layer.weight_spline.detach()
+
+    x = x_spline[:, spline_spec.index[spline_spec.feature_dim]]
+    y = splines[:, *spline_spec.index]
+
+    return x, y

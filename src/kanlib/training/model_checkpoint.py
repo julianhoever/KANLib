@@ -16,10 +16,8 @@ class ModelCheckpoint:
             self._best_checkpoint = self._current_model_checkpoint()
 
     def load_best(self) -> None:
-        if self._best_checkpoint is None:
-            raise RuntimeError("Call `update` before calling `load_best`.")
-
-        self._model.load_state_dict(self._best_checkpoint)
+        if self._best_checkpoint is not None:
+            self._model.load_state_dict(self._best_checkpoint)
 
     def _current_model_checkpoint(self) -> dict[str, Any]:
         return deepcopy(self._model.state_dict())

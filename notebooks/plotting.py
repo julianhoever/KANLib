@@ -108,6 +108,7 @@ def _(linear_spline, model, plot_spline, plt):
             for in_idx in range(model[layer_idx].in_features):
                 plot_spline(
                     spline_spec=linear_spline(model[layer_idx], in_idx, out_idx),
+                    show_grid=True,
                     ax=axs[layer_idx, in_idx],
                 )
 

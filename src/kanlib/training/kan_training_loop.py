@@ -107,7 +107,7 @@ def train(
     def update_grid_hook(epoch: int, m: torch.nn.Module) -> None:
         assert update_grid_every_nth_epochs is not None
 
-        if epoch != 0 and epoch % update_grid_every_nth_epochs == 0:
+        if epoch % update_grid_every_nth_epochs == 0:
             indices = torch.randint(len(ds_train), size=(batch_size,))  # type: ignore
             inputs = ds_train[indices][0].to(device)
 

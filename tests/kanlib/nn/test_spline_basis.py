@@ -3,6 +3,7 @@ from typing import Optional
 
 import pytest
 import torch
+
 from kanlib.nn.spline_basis import AdaptiveGrid, SplineBasis
 
 
@@ -24,7 +25,9 @@ class SplineBasisImpl(SplineBasis):
     def num_basis_functions(self) -> int:
         raise NotImplementedError()
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, grid: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         raise NotImplementedError()
 
 

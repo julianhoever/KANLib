@@ -1,7 +1,7 @@
-from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import partial
+from math import floor
 from typing import Any, Literal, Optional, overload
 
 import torch
@@ -21,39 +21,103 @@ class Checkpoint:
     trained_state: dict[str, Any]
 
 
-@overload
 def train(
     model: torch.nn.Module,
     ds_train: Dataset,
     ds_val: Dataset,
     epochs: int,
     batch_size: int,
-    loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    loss_fn: torch.nn.Module,
     optimizer_cls: type[torch.optim.Optimizer],
     optimizer_kwargs: dict[str, Any],
-    load_best: bool,
-    update_grid_every_nth_epochs: Optional[int],
-    refine_grid_sizes: Optional[list[int]],
-    device: torch.device,
-    num_workers: int,
-    pin_memory: bool,
-    persistent_workers: bool,
-) -> History: ...
+    num_grid_updates: int = 0,
+    start_grid_updates: int = 0,
+    stop_grid_updates: int = -1,
+    grid_size_refinements: Optional[list[int]] = None,
+    load_best: bool = False,
+    device: torch.device = torch.device("cpu"),
+    num_workers: int = 0,
+    pin_memory: bool = False,
+    persistent_workers: bool = False,
+) -> History:
+    return _train(
+        model=model,
+        ds_train=ds_train,
+        ds_val=ds_val,
+        epochs=epochs,
+        batch_size=batch_size,
+        loss_fn=loss_fn,
+        optimizer_cls=optimizer_cls,
+        optimizer_kwargs=optimizer_kwargs,
+        load_best=load_best,
+        num_grid_updates=num_grid_updates,
+        start_grid_updates=start_grid_updates,
+        stop_grid_updates=stop_grid_updates,
+        grid_size_refinements=grid_size_refinements,
+        device=device,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        persistent_workers=persistent_workers,
+        return_checkpoints=False,
+    )
 
 
-@overload
-def train(
+def train_with_checkpoints(
     model: torch.nn.Module,
     ds_train: Dataset,
     ds_val: Dataset,
     epochs: int,
     batch_size: int,
-    loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    loss_fn: torch.nn.Module,
     optimizer_cls: type[torch.optim.Optimizer],
     optimizer_kwargs: dict[str, Any],
+    num_grid_updates: int = 0,
+    start_grid_updates: int = 0,
+    stop_grid_updates: int = -1,
+    grid_size_refinements: Optional[list[int]] = None,
+    load_best: bool = False,
+    device: torch.device = torch.device("cpu"),
+    num_workers: int = 0,
+    pin_memory: bool = False,
+    persistent_workers: bool = False,
+) -> tuple[History, list[Checkpoint]]:
+    return _train(
+        model=model,
+        ds_train=ds_train,
+        ds_val=ds_val,
+        epochs=epochs,
+        batch_size=batch_size,
+        loss_fn=loss_fn,
+        optimizer_cls=optimizer_cls,
+        optimizer_kwargs=optimizer_kwargs,
+        load_best=load_best,
+        num_grid_updates=num_grid_updates,
+        start_grid_updates=start_grid_updates,
+        stop_grid_updates=stop_grid_updates,
+        grid_size_refinements=grid_size_refinements,
+        device=device,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        persistent_workers=persistent_workers,
+        return_checkpoints=True,
+    )
+
+
+@overload
+def _train(
+    model: torch.nn.Module,
+    ds_train: Dataset,
+    ds_val: Dataset,
+    epochs: int,
+    batch_size: int,
+    loss_fn: torch.nn.Module,
+    optimizer_cls: type[torch.optim.Optimizer],
+    optimizer_kwargs: dict[str, Any],
+    num_grid_updates: int,
+    start_grid_updates: int,
+    stop_grid_updates: int,
+    grid_size_refinements: Optional[list[int]],
     load_best: bool,
-    update_grid_every_nth_epochs: Optional[int],
-    refine_grid_sizes: Optional[list[int]],
     device: torch.device,
     num_workers: int,
     pin_memory: bool,
@@ -63,18 +127,20 @@ def train(
 
 
 @overload
-def train(
+def _train(
     model: torch.nn.Module,
     ds_train: Dataset,
     ds_val: Dataset,
     epochs: int,
     batch_size: int,
-    loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    loss_fn: torch.nn.Module,
     optimizer_cls: type[torch.optim.Optimizer],
     optimizer_kwargs: dict[str, Any],
+    num_grid_updates: int,
+    start_grid_updates: int,
+    stop_grid_updates: int,
+    grid_size_refinements: Optional[list[int]],
     load_best: bool,
-    update_grid_every_nth_epochs: Optional[int],
-    refine_grid_sizes: Optional[list[int]],
     device: torch.device,
     num_workers: int,
     pin_memory: bool,
@@ -83,37 +149,39 @@ def train(
 ) -> tuple[History, list[Checkpoint]]: ...
 
 
-def train(
+def _train(
     model: torch.nn.Module,
     ds_train: Dataset,
     ds_val: Dataset,
     epochs: int,
     batch_size: int,
-    loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    loss_fn: torch.nn.Module,
     optimizer_cls: type[torch.optim.Optimizer],
     optimizer_kwargs: dict[str, Any],
+    num_grid_updates: int,
+    start_grid_updates: int,
+    stop_grid_updates: int,
+    grid_size_refinements: Optional[list[int]],
     load_best: bool,
-    update_grid_every_nth_epochs: Optional[int] = None,
-    refine_grid_sizes: Optional[list[int]] = None,
-    device: torch.device = torch.device("cpu"),
-    num_workers: int = 0,
-    pin_memory: bool = False,
-    persistent_workers: bool = False,
-    return_checkpoints: bool = False,
+    device: torch.device,
+    num_workers: int,
+    pin_memory: bool,
+    persistent_workers: bool,
+    return_checkpoints: bool,
 ) -> History | tuple[History, list[Checkpoint]]:
-    if refine_grid_sizes is not None and len(refine_grid_sizes) > 0:
-        epochs = epochs // (len(refine_grid_sizes) + 1)
+    epochs_to_update_grid = _compute_grid_update_epochs(
+        start_epoch=start_grid_updates,
+        stop_epoch=epochs if stop_grid_updates == -1 else stop_grid_updates,
+        num_updates=num_grid_updates,
+    )
 
     def update_grid_hook(epoch: int, m: torch.nn.Module) -> None:
-        assert update_grid_every_nth_epochs is not None
-
-        if epoch % update_grid_every_nth_epochs == 0:
+        if epoch in epochs_to_update_grid:
             indices = torch.randint(len(ds_train), size=(batch_size,))  # type: ignore
             inputs = ds_train[indices][0].to(device)
-
             update_grid(m, inputs)
 
-    _train = partial(
+    train_loop = partial(
         raw_train_loop,
         model=model,
         ds_train=ds_train,
@@ -127,14 +195,12 @@ def train(
         num_workers=num_workers,
         pin_memory=pin_memory,
         persistent_workers=persistent_workers,
-        on_epoch_starts=(
-            None if update_grid_every_nth_epochs is None else update_grid_hook
-        ),
+        on_epoch_starts=update_grid_hook,
     )
 
     grid_sizes = [0]
-    if refine_grid_sizes is not None and len(refine_grid_sizes) > 0:
-        grid_sizes += refine_grid_sizes
+    if grid_size_refinements is not None and len(grid_size_refinements) > 0:
+        grid_sizes += grid_size_refinements
 
     history = History()
     checkpoints: list[Checkpoint] = []
@@ -145,7 +211,7 @@ def train(
 
         untrained_state = _model_state(model)
 
-        new_history = _train(
+        new_history = train_loop(
             load_best=load_best and refinement_step_idx == len(grid_sizes) - 1,
         )
         history.merge(new_history)
@@ -160,3 +226,12 @@ def train(
 
 def _model_state(model: torch.nn.Module) -> ModelState:
     return deepcopy(model.state_dict())
+
+
+def _compute_grid_update_epochs(
+    start_epoch: int, stop_epoch: int, num_updates: int
+) -> set[int]:
+    if num_updates == 0:
+        return set()
+    step_size = (stop_epoch - start_epoch) / num_updates
+    return {start_epoch + floor(step_size * i) for i in range(num_updates)}

@@ -1,18 +1,7 @@
-from functools import partial
-
 import torch
 from torch.nn.functional import linear, silu
-from torch.nn.init import normal_ as init_normal
-from torch.nn.init import ones_ as init_ones
-from torch.nn.init import xavier_uniform_ as init_xavier_uniform
-from torch.nn.init import zeros_ as init_zeros
 
-from kanlib.nn.kan_base_layer import (
-    BasisFactory,
-    KANBaseLayer,
-    ModuleParamSpecs,
-    ParamSpec,
-)
+from kanlib.nn.kan_base_layer import BasisFactory, KANBaseLayer, default_param_specs
 
 
 class LinearBase(KANBaseLayer):
@@ -33,15 +22,11 @@ class LinearBase(KANBaseLayer):
             param_shape=(out_features, in_features),
             in_feature_dim=1,
             out_feature_dim=0,
-            param_specs=ModuleParamSpecs(
-                coefficients=ParamSpec(
-                    partial(init_normal, mean=0, std=init_coeff_std)
-                ),
-                weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
-                weight_residual=(
-                    ParamSpec(init_xavier_uniform) if use_residual_branch else None
-                ),
-                bias_output=ParamSpec(init_zeros) if use_output_bias else None,
+            param_specs=default_param_specs(
+                use_spline_weight=use_spline_weight,
+                use_residual_branch=use_residual_branch,
+                use_output_bias=use_output_bias,
+                init_coeff_std=init_coeff_std,
             ),
             grid_size=grid_size,
             spline_range=spline_range,

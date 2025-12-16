@@ -1,9 +1,14 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from typing import Optional, Protocol
 
 import torch
+from torch.nn.init import normal_ as init_normal
+from torch.nn.init import ones_ as init_ones
+from torch.nn.init import xavier_uniform_ as init_xavier_uniform
+from torch.nn.init import zeros_ as init_zeros
 
 from kanlib.compute_coefficients import compute_coefficients
 
@@ -90,7 +95,7 @@ class KANBaseLayer(torch.nn.Module, ABC):
 
         return output
 
-    @torch.no_grad
+    @torch.no_grad()
     def refine_grid(self, grid_size: int) -> None:
         basis_fine = self.basis_factory(
             grid_size=grid_size, spline_range=self.basis.spline_range
@@ -105,7 +110,7 @@ class KANBaseLayer(torch.nn.Module, ABC):
         self.basis = basis_fine
         self.coefficients.data = coeff_fine.movedim(-2, self.in_feature_dim)
 
-    @torch.no_grad
+    @torch.no_grad()
     def update_grid(self, x: torch.Tensor) -> None:
         if not isinstance(self.basis, AdaptiveGrid):
             raise ValueError(
@@ -149,4 +154,20 @@ def _spline_range_to_tensor(
         return spline_range
     return torch.tensor(spline_range, dtype=torch.get_default_dtype()).repeat(
         num_features, 1
+    )
+
+
+def default_param_specs(
+    use_spline_weight: bool,
+    use_residual_branch: bool,
+    use_output_bias: bool,
+    init_coeff_std: float,
+) -> ModuleParamSpecs:
+    return ModuleParamSpecs(
+        coefficients=ParamSpec(partial(init_normal, mean=0, std=init_coeff_std)),
+        weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
+        weight_residual=(
+            ParamSpec(init_xavier_uniform) if use_residual_branch else None
+        ),
+        bias_output=ParamSpec(init_zeros) if use_output_bias else None,
     )

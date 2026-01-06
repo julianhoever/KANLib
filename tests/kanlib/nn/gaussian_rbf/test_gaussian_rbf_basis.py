@@ -16,10 +16,6 @@ def test_grid_has_two_dimensions(rbf: GaussianRbfBasis) -> None:
     assert rbf.grid.ndim == 2
 
 
-def test_epsilon_has_two_dimensions(rbf: GaussianRbfBasis) -> None:
-    assert rbf.epsilon.ndim == 2
-
-
 def test_correct_number_of_grid(rbf: GaussianRbfBasis) -> None:
     assert rbf.grid.shape[-1] == rbf.num_basis_functions
 

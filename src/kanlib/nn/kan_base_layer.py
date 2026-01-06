@@ -112,7 +112,7 @@ class KANBaseLayer(torch.nn.Module, ABC):
                 f"{type(self.basis).__name__} does not support adaptive grid."
             )
 
-        new_grid = self.basis.updated_grid_from_samples(x)
+        grid_update = self.basis.grid_update_from_samples(x)
 
         try:
             new_coeff = compute_coefficients(
@@ -120,12 +120,12 @@ class KANBaseLayer(torch.nn.Module, ABC):
                     self.in_feature_dim, -2
                 ),
                 original_basis_values=self.basis(x),
-                target_basis_values=self.basis(x, grid=new_grid),
+                target_basis_values=self.basis(x, grid=grid_update.grid),
             )
         except RuntimeError:
             pass
         else:
-            self.basis.set_grid(new_grid)
+            self.basis.update_grid(grid_update)
             self.coefficients.data = new_coeff.movedim(-2, self.in_feature_dim)
 
     def _add_parameter(self, name: str, shape: tuple[int, ...]) -> None:

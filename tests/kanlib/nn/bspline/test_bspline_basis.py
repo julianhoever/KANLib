@@ -1,8 +1,9 @@
 import pytest
 import torch
-from kanlib.nn.bspline.bspline_basis import BSplineBasis
 from scipy.interpolate import BSpline
 from torch.testing import assert_close
+
+from kanlib.nn.bspline.bspline_basis import BSplineBasis
 
 
 def reference_bspline_basis(
@@ -32,7 +33,7 @@ def reference_bspline_basis(
 def basis(request: pytest.FixtureRequest) -> BSplineBasis:
     return BSplineBasis(
         grid_size=request.param["grid_size"],
-        spline_range=torch.tensor([[-1, 1]] * request.param["num_features"]),
+        spline_range=torch.tensor([[-1.0, 1.0]] * request.param["num_features"]),
         spline_order=request.param["spline_order"],
     )
 
@@ -42,24 +43,15 @@ def test_raises_error_on_invalid_grid_size(grid_size: int) -> None:
     with pytest.raises(ValueError):
         _ = BSplineBasis(
             grid_size=grid_size,
-            spline_range=torch.Tensor([[-1, 1]]),
+            spline_range=torch.Tensor([[-1.0, 1.0]]),
             spline_order=0,
         )
 
 
-def test_spline_range_for_unmodified_grid(basis: BSplineBasis) -> None:
+def test_spline_range_for_grid(basis: BSplineBasis) -> None:
     assert_close(
         actual=basis.spline_range,
         expected=torch.tensor([[-1.0, 1.0]] * basis.num_features),
-    )
-
-
-def test_spline_range_adapts_to_grid_changes(basis: BSplineBasis) -> None:
-    factor = torch.arange(2, 2 + len(basis.grid)).unsqueeze(dim=-1)
-    basis.grid = basis.grid * factor
-    assert_close(
-        actual=basis.spline_range,
-        expected=torch.tensor([[-1.0, 1.0]] * basis.num_features) * factor,
     )
 
 
@@ -131,6 +123,6 @@ def test_updated_grid_does_not_change_grid(grid_size: int) -> None:
     initial_grid = basis.grid
 
     inputs = torch.empty(100, 2)
-    _ = basis.updated_grid_from_samples(inputs)
+    _ = basis.grid_update_from_samples(inputs)
 
     assert (basis.grid == initial_grid).all()

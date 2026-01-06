@@ -2,11 +2,12 @@ from typing import cast
 
 import pytest
 import torch
-from kanlib.nn.kan_base_layer import KANBaseLayer, ModuleParamSpecs, ParamSpec
-from kanlib.nn.spline_basis import SplineBasis
 from torch.nn.init import ones_ as init_ones
 from torch.nn.init import zeros_ as init_zeros
 from torch.testing import assert_close
+
+from kanlib.nn.kan_base_layer import KANBaseLayer, ModuleParamSpecs, ParamSpec
+from kanlib.nn.spline_basis import SplineBasis
 
 
 class DummyBasis(SplineBasis):

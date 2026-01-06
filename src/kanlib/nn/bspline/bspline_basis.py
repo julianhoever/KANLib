@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 import torch
 
-from kanlib.nn.spline_basis import AdaptiveGrid, SplineBasis
+from kanlib.nn.spline_basis import AdaptiveGrid, GridUpdate, SplineBasis
 
 
 class BSplineBasis(SplineBasis, AdaptiveGrid):
@@ -33,12 +33,6 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
             raise ValueError("`grid_size` must be at least 1")
 
     @property
-    def spline_range(self) -> torch.Tensor:
-        _, grid_points = self.grid.shape
-        trimmed_grid = self.grid[:, self.spline_order : grid_points - self.spline_order]
-        return trimmed_grid[:, [0, -1]]
-
-    @property
     def num_basis_functions(self) -> int:
         return self.grid_size + self.spline_order
 
@@ -52,7 +46,7 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
         )
 
     @torch.no_grad
-    def updated_grid_from_samples(self, x: torch.Tensor) -> torch.Tensor:
+    def grid_update_from_samples(self, x: torch.Tensor) -> GridUpdate:
         """
         Implementation is based on:
         https://github.com/Blealtan/efficient-kan/blob/7b6ce1c87f18c8bc90c208f6b494042344216b11/src/efficient_kan/kan.py#L169-L215
@@ -86,7 +80,8 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
             self.uniform_fraction * grid_uniform
             + (1 - self.uniform_fraction) * grid_adaptive
         )
-        grid = torch.cat(
+
+        final_grid = torch.cat(
             [
                 grid[:1] - step_size * arange(self.spline_order, 0, -1),
                 grid,
@@ -95,7 +90,7 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
             dim=0,
         )
 
-        return grid.T
+        return GridUpdate(grid=final_grid.T, spline_range=grid.T[:, [0, -1]])
 
 
 def _initialize_grid(

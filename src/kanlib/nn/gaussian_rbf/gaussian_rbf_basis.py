@@ -16,12 +16,13 @@ class GaussianRbfBasis(SplineBasis):
                 _initialize_grid, grid_size=grid_size, spline_range=spline_range
             ),
         )
-        self.epsilon: torch.Tensor
-        self.register_buffer(
-            name="epsilon",
-            tensor=(self.num_basis_functions - 1)
-            / (self.spline_range[:, [1]] - self.spline_range[:, [0]]),
-        )
+
+    @property
+    def epsilon(self) -> torch.Tensor:
+        grid_min = self.grid.min(dim=-1, keepdim=True).values
+        grid_max = self.grid.max(dim=-1, keepdim=True).values
+        grid_len = self.grid.size(dim=-1)
+        return (grid_len - 1) / (grid_max - grid_min)
 
     @property
     def num_basis_functions(self) -> int:

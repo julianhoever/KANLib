@@ -9,7 +9,12 @@ _APPROXIMATED_BSPLINE_ORDER = 3
 
 
 class GaussianRbfBasis(SplineBasis, AdaptiveGrid):
-    def __init__(self, grid_size: int, spline_range: torch.Tensor) -> None:
+    def __init__(
+        self,
+        grid_size: int,
+        spline_range: torch.Tensor,
+        adaptive_grid_margin: float = 0.01,
+    ) -> None:
         super().__init__(
             grid_size=grid_size,
             spline_range=spline_range,
@@ -17,6 +22,7 @@ class GaussianRbfBasis(SplineBasis, AdaptiveGrid):
                 _initialize_grid, grid_size=grid_size, spline_range=spline_range
             ),
         )
+        self.margin = adaptive_grid_margin
 
     @property
     def num_basis_functions(self) -> int:
@@ -29,8 +35,8 @@ class GaussianRbfBasis(SplineBasis, AdaptiveGrid):
 
     def grid_update_from_samples(self, x: torch.Tensor) -> GridUpdate:
         x_transposed = x.view(-1, self.num_features).T
-        smin = x_transposed.min(dim=-1, keepdim=True).values
-        smax = x_transposed.max(dim=-1, keepdim=True).values
+        smin = x_transposed.min(dim=-1, keepdim=True).values - self.margin
+        smax = x_transposed.max(dim=-1, keepdim=True).values + self.margin
         spline_range = torch.hstack([smin, smax])
         return GridUpdate(
             grid=_initialize_grid(grid_size=self.grid_size, spline_range=spline_range),

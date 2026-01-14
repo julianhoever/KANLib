@@ -4,12 +4,11 @@ __generated_with = "0.18.3"
 app = marimo.App(width="medium")
 
 with app.setup:
-    import marimo as mo
-
     from functools import partial
 
-    import torch
+    import marimo as mo
     import matplotlib.pyplot as plt
+    import torch
 
     from kanlib.nn.bspline import BSplineBasis
     from kanlib.nn.gaussian_rbf import GaussianRbfBasis
@@ -18,7 +17,10 @@ with app.setup:
 @app.cell
 def _():
     basis_fn = mo.ui.radio(
-        options={"BSpline": partial(BSplineBasis, spline_order=3), "GRBF": GaussianRbfBasis},
+        options={
+            "BSpline": partial(BSplineBasis, spline_order=3),
+            "GRBF": GaussianRbfBasis,
+        },
         value="GRBF",
         label="Basis",
         inline=True,
@@ -33,7 +35,9 @@ def _():
 @app.cell
 def _(basis_fn, grid_size, start, stop):
     inputs = torch.linspace(start.value, stop.value, 1000).unsqueeze(dim=-1)
-    basis = basis_fn.value(grid_size=grid_size.value, spline_range=torch.tensor([[-1, 1]]))
+    basis = basis_fn.value(
+        grid_size=grid_size.value, spline_range=torch.tensor([[-1, 1]])
+    )
 
     grid_update = basis.grid_update_from_samples(inputs)
     basis.update_grid(grid_update)

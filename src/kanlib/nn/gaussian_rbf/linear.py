@@ -1,3 +1,5 @@
+from functools import partial
+
 import torch
 
 from kanlib.nn.base_modules.linear import LinearBase
@@ -17,13 +19,16 @@ class Linear(LinearBase):
         use_residual_branch: bool = True,
         use_spline_weight: bool = True,
         init_coeff_std: float = 0.1,
+        adaptive_grid_margin: float = 0.01,
     ) -> None:
         super().__init__(
             in_features=in_features,
             out_features=out_features,
             grid_size=grid_size,
             spline_range=spline_range,
-            basis_factory=GaussianRbfBasis,
+            basis_factory=partial(
+                GaussianRbfBasis, adaptive_grid_margin=adaptive_grid_margin
+            ),
             use_output_bias=use_output_bias,
             use_spline_input_norm=use_spline_input_norm,
             use_residual_branch=use_residual_branch,

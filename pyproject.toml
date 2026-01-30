@@ -23,6 +23,7 @@ dev = [
     "pytest>=9.0.1",
     "python-lsp-server>=1.13.2",
     "ruff>=0.14.5",
+    "ty>=0.0.14",
 ]
 
 [build-system]

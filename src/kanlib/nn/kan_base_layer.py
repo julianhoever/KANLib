@@ -90,7 +90,7 @@ class KANBaseLayer(torch.nn.Module, ABC):
 
         return output
 
-    @torch.no_grad
+    @torch.no_grad()
     def refine_grid(self, grid_size: int) -> None:
         basis_fine = self.basis_factory(
             grid_size=grid_size, spline_range=self.basis.spline_range
@@ -105,7 +105,7 @@ class KANBaseLayer(torch.nn.Module, ABC):
         self.basis = basis_fine
         self.coefficients.data = coeff_fine.movedim(-2, self.in_feature_dim)
 
-    @torch.no_grad
+    @torch.no_grad()
     def update_grid(self, x: torch.Tensor) -> None:
         if not isinstance(self.basis, AdaptiveGrid):
             raise ValueError(

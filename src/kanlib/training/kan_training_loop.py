@@ -178,7 +178,7 @@ def _train(
     def update_grid_hook(epoch: int, m: torch.nn.Module) -> None:
         if epoch in epochs_to_update_grid:
             indices = torch.randint(len(ds_train), size=(batch_size,))  # type: ignore
-            inputs = ds_train[indices][0].to(device)
+            inputs = torch.stack([ds_train[idx][0] for idx in indices]).to(device)
             update_grid(m, inputs)
 
     train_loop = partial(

@@ -20,11 +20,18 @@ class History:
         self["val_loss"].append(val_loss)
 
     def save_csv(self, destination: Path) -> None:
+        num_epochs = len(self["epoch"])
+        history = dict(
+            epoch=self["epoch"] * 2,
+            split=["training"] * num_epochs + ["validation"] * num_epochs,
+            loss=self["train_loss"] + self["val_loss"],
+        )
+
         with open(destination, "w", newline="") as out_file:
-            writer = csv.DictWriter(out_file, fieldnames=self._history.keys())
+            writer = csv.DictWriter(out_file, fieldnames=["epoch", "split", "loss"])
             writer.writeheader()
-            for idx in range(len(self)):
-                row = {name: values[idx] for name, values in self._history.items()}
+            for idx in range(num_epochs * 2):
+                row = {name: values[idx] for name, values in history.items()}
                 writer.writerow(row)
 
     def merge(self, new_history: "History") -> None:

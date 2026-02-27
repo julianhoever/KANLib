@@ -52,19 +52,20 @@ def train(
 
             running_loss = 0.0
 
-            for samples, labels in dl_train:
+            for samples, targets in dl_train:
                 samples = samples.to(device)
-                labels = labels.to(device)
+                targets = targets.to(device)
 
-                model.zero_grad()
+                def closure() -> float:
+                    optimizer.zero_grad()
 
-                predictions = model(samples)
-                loss = loss_fn(predictions, labels)
+                    outputs = model(samples)
+                    loss = loss_fn(outputs, targets)
+                    loss.backward()
 
-                loss.backward()
-                optimizer.step()
+                    return loss.item()
 
-                running_loss += loss.item()
+                running_loss += optimizer.step(closure)
 
             train_loss = running_loss / len(dl_train)
 
@@ -72,14 +73,12 @@ def train(
             running_loss = 0.0
 
             with torch.no_grad():
-                for samples, labels in dl_val:
+                for samples, targets in dl_val:
                     samples = samples.to(device)
-                    labels = labels.to(device)
+                    targets = targets.to(device)
 
-                    predictions = model(samples)
-                    loss = loss_fn(predictions, labels)
-
-                    running_loss += loss.item()
+                    outputs = model(samples)
+                    running_loss += loss_fn(outputs, targets).item()
 
             val_loss = running_loss / len(dl_val)
 

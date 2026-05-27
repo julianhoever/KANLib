@@ -33,6 +33,7 @@ class GaussianRbfBasis(SplineBasis, AdaptiveGrid):
     ) -> torch.Tensor:
         return _compute_grbf_basis(x=x, grid=self.grid if grid is None else grid)
 
+    @torch.no_grad()
     def grid_update_from_samples(self, x: torch.Tensor) -> GridUpdate:
         x_transposed = x.view(-1, self.num_features).T
         smin = x_transposed.min(dim=-1, keepdim=True).values - self.margin

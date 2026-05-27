@@ -37,6 +37,7 @@ class AdaptiveGrid(ABC):
     @abstractmethod
     def grid_update_from_samples(self, x: torch.Tensor) -> GridUpdate: ...
 
+    @torch.no_grad()
     def update_grid(self, grid_update: GridUpdate) -> None:
         validate_grid(grid_update.grid, self.num_features)
         validate_spline_range(grid_update.spline_range, self.num_features)

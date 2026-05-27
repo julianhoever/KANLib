@@ -45,7 +45,7 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
             spline_order=self.spline_order,
         )
 
-    @torch.no_grad
+    @torch.no_grad()
     def grid_update_from_samples(self, x: torch.Tensor) -> GridUpdate:
         """
         Implementation is based on:

@@ -41,5 +41,11 @@ class AdaptiveGrid(ABC):
     def update_grid(self, grid_update: GridUpdate) -> None:
         validate_grid(grid_update.grid, self.num_features)
         validate_spline_range(grid_update.spline_range, self.num_features)
-        self.grid = grid_update.grid
-        self.spline_range = grid_update.spline_range
+        self._set_grid(grid_update.grid)
+        self._set_spline_range(grid_update.spline_range)
+
+    def _set_grid(self, grid: torch.Tensor) -> None:
+        self.grid = grid
+
+    def _set_spline_range(self, spline_range: torch.Tensor) -> None:
+        self.spline_range = spline_range

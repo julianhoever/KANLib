@@ -4,7 +4,12 @@ from typing import Literal, Protocol, cast
 import torch
 from torch.nn.functional import conv1d, conv2d, silu
 
-from kanlib.nn.kan_base_layer import BasisFactory, KANBaseLayer, default_param_specs
+from kanlib.nn.kan_base_layer import (
+    BasisSpec,
+    KANBaseLayer,
+    LayerSpec,
+    default_param_specs,
+)
 
 type PaddingStr = Literal["same", "valid"]
 type SupportedConvDim = Literal[1, 2]
@@ -14,6 +19,7 @@ class _ConvBase(KANBaseLayer):
     def __init__(
         self,
         conv_dim: SupportedConvDim,
+        basis_spec: BasisSpec,
         in_channels: int,
         out_channels: int,
         kernel_size: int | tuple[int, ...],
@@ -21,9 +27,6 @@ class _ConvBase(KANBaseLayer):
         padding: int | tuple[int, ...] | PaddingStr,
         dilation: int | tuple[int, ...],
         groups: int,
-        grid_size: int,
-        spline_range: tuple[float, float] | torch.Tensor,
-        basis_factory: BasisFactory,
         use_output_bias: bool,
         use_residual_branch: bool,
         use_spline_weight: bool,
@@ -32,18 +35,19 @@ class _ConvBase(KANBaseLayer):
         kernel_size = _to_tuple(kernel_size, conv_dim)
 
         super().__init__(
-            param_shape=(out_channels, in_channels // groups, *kernel_size),
-            in_feature_dim=1,
-            out_feature_dim=0,
+            layer_spec=LayerSpec(
+                input_features=in_channels,
+                param_shape=(out_channels, in_channels // groups, *kernel_size),
+                in_feat_dim=1,
+                out_feat_dim=0,
+            ),
             param_specs=default_param_specs(
                 use_spline_weight=use_spline_weight,
                 use_residual_branch=use_residual_branch,
                 use_output_bias=use_output_bias,
                 init_coeff_std=init_coeff_std,
             ),
-            grid_size=grid_size,
-            spline_range=spline_range,
-            basis_factory=basis_factory,
+            basis_spec=basis_spec,
         )
 
         if groups <= 0:
@@ -121,6 +125,7 @@ def _determine_convolution(conv_dim: SupportedConvDim) -> _ConvolutionFunc:
 class Conv1dBase(_ConvBase):
     def __init__(
         self,
+        basis_spec: BasisSpec,
         in_channels: int,
         out_channels: int,
         kernel_size: int | tuple[int],
@@ -128,9 +133,6 @@ class Conv1dBase(_ConvBase):
         padding: int | tuple[int] | PaddingStr,  # default: 0
         dilation: int | tuple[int],  # default: 1
         groups: int,  # default: 1
-        grid_size: int,
-        spline_range: tuple[float, float] | torch.Tensor,
-        basis_factory: BasisFactory,
         use_output_bias: bool,
         use_residual_branch: bool,
         use_spline_weight: bool,
@@ -138,6 +140,7 @@ class Conv1dBase(_ConvBase):
     ) -> None:
         super().__init__(
             conv_dim=1,
+            basis_spec=basis_spec,
             in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=kernel_size,
@@ -145,9 +148,6 @@ class Conv1dBase(_ConvBase):
             padding=padding,
             dilation=dilation,
             groups=groups,
-            grid_size=grid_size,
-            spline_range=spline_range,
-            basis_factory=basis_factory,
             use_output_bias=use_output_bias,
             use_residual_branch=use_residual_branch,
             use_spline_weight=use_spline_weight,
@@ -158,6 +158,7 @@ class Conv1dBase(_ConvBase):
 class Conv2dBase(_ConvBase):
     def __init__(
         self,
+        basis_spec: BasisSpec,
         in_channels: int,
         out_channels: int,
         kernel_size: int | tuple[int, int],
@@ -165,9 +166,6 @@ class Conv2dBase(_ConvBase):
         padding: int | tuple[int, int] | PaddingStr,  # default: 0
         dilation: int | tuple[int, int],  # default: 1
         groups: int,  # default: 1
-        grid_size: int,
-        spline_range: tuple[float, float] | torch.Tensor,
-        basis_factory: BasisFactory,
         use_output_bias: bool,
         use_residual_branch: bool,
         use_spline_weight: bool,
@@ -175,6 +173,7 @@ class Conv2dBase(_ConvBase):
     ) -> None:
         super().__init__(
             conv_dim=2,
+            basis_spec=basis_spec,
             in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=kernel_size,
@@ -182,9 +181,6 @@ class Conv2dBase(_ConvBase):
             padding=padding,
             dilation=dilation,
             groups=groups,
-            grid_size=grid_size,
-            spline_range=spline_range,
-            basis_factory=basis_factory,
             use_output_bias=use_output_bias,
             use_residual_branch=use_residual_branch,
             use_spline_weight=use_spline_weight,

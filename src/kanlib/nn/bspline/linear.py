@@ -3,6 +3,7 @@ from functools import partial
 import torch
 
 from kanlib.nn.base_modules.linear import LinearBase
+from kanlib.nn.kan_base_layer import BasisSpec
 
 from .bspline_basis import BSplineBasis
 
@@ -23,16 +24,18 @@ class Linear(LinearBase):
         adaptive_grid_uniform_fraction: float = 0.02,
     ) -> None:
         super().__init__(
+            basis_spec=BasisSpec(
+                basis_factory=partial(
+                    BSplineBasis,
+                    spline_order=spline_order,
+                    adaptive_grid_margin=adaptive_grid_margin,
+                    adaptive_grid_uniform_fraction=adaptive_grid_uniform_fraction,
+                ),
+                grid_size=grid_size,
+                spline_range=spline_range,
+            ),
             in_features=in_features,
             out_features=out_features,
-            grid_size=grid_size,
-            spline_range=spline_range,
-            basis_factory=partial(
-                BSplineBasis,
-                spline_order=spline_order,
-                adaptive_grid_margin=adaptive_grid_margin,
-                adaptive_grid_uniform_fraction=adaptive_grid_uniform_fraction,
-            ),
             use_output_bias=use_output_bias,
             use_residual_branch=use_residual_branch,
             use_spline_weight=use_spline_weight,

@@ -16,44 +16,52 @@ from .spline_basis import AdaptiveGrid, SplineBasis
 
 
 @dataclass
-class ParamSpec:
-    initializer: Callable[[torch.Tensor], torch.Tensor]
-    requires_grad: bool = True
+class LayerSpec:
+    input_features: int
+    param_shape: tuple[int, ...]
+    in_feat_dim: int
+    out_feat_dim: int
 
 
 @dataclass
-class ModuleParamSpecs:
+class KANParamSpec:
+    @dataclass
+    class ParamSpec:
+        initializer: Callable[[torch.Tensor], torch.Tensor]
+        requires_grad: bool = True
+
     coefficients: ParamSpec
     weight_spline: Optional[ParamSpec]
     weight_residual: Optional[ParamSpec]
     bias_output: Optional[ParamSpec]
 
 
-class BasisFactory(Protocol):
-    def __call__(self, grid_size: int, spline_range: torch.Tensor) -> SplineBasis: ...
+@dataclass
+class BasisSpec:
+    class _BasisFactory(Protocol):
+        def __call__(
+            self, grid_size: int, spline_range: torch.Tensor
+        ) -> SplineBasis: ...
+
+    basis_factory: _BasisFactory
+    grid_size: int
+    spline_range: tuple[float, float] | torch.Tensor
 
 
 class KANBaseLayer(torch.nn.Module, ABC):
     def __init__(
-        self,
-        param_shape: tuple[int, ...],
-        in_feature_dim: int,
-        out_feature_dim: int,
-        param_specs: ModuleParamSpecs,
-        grid_size: int,
-        spline_range: tuple[float, float] | torch.Tensor,
-        basis_factory: BasisFactory,
+        self, layer_spec: LayerSpec, param_specs: KANParamSpec, basis_spec: BasisSpec
     ) -> None:
         super().__init__()
-        self.in_feature_dim = in_feature_dim
+        self.in_feature_dim = layer_spec.in_feat_dim
 
-        self.basis = basis_factory(
-            grid_size=grid_size,
+        self.basis = basis_spec.basis_factory(
+            grid_size=basis_spec.grid_size,
             spline_range=_spline_range_to_tensor(
-                spline_range, num_features=param_shape[in_feature_dim]
+                basis_spec.spline_range, num_features=layer_spec.input_features
             ),
         )
-        self.basis_factory = basis_factory
+        self.basis_factory = basis_spec.basis_factory
         self.param_specs = param_specs
 
         self.coefficients: torch.nn.Parameter
@@ -62,11 +70,13 @@ class KANBaseLayer(torch.nn.Module, ABC):
         self.bias_output: torch.nn.Parameter | None
 
         self._add_parameter(
-            "coefficients", (*param_shape, self.basis.num_basis_functions)
+            "coefficients", (*layer_spec.param_shape, self.basis.num_basis_functions)
         )
-        self._add_parameter("weight_spline", param_shape)
-        self._add_parameter("weight_residual", param_shape)
-        self._add_parameter("bias_output", (param_shape[out_feature_dim],))
+        self._add_parameter("weight_spline", layer_spec.param_shape)
+        self._add_parameter("weight_residual", layer_spec.param_shape)
+        self._add_parameter(
+            "bias_output", (layer_spec.param_shape[layer_spec.out_feat_dim],)
+        )
 
     @property
     def weighted_coefficients(self) -> torch.Tensor:
@@ -158,12 +168,14 @@ def default_param_specs(
     use_residual_branch: bool,
     use_output_bias: bool,
     init_coeff_std: float,
-) -> ModuleParamSpecs:
-    return ModuleParamSpecs(
-        coefficients=ParamSpec(partial(init_normal, mean=0, std=init_coeff_std)),
-        weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
-        weight_residual=(
-            ParamSpec(init_xavier_uniform) if use_residual_branch else None
+) -> KANParamSpec:
+    return KANParamSpec(
+        coefficients=KANParamSpec.ParamSpec(
+            partial(init_normal, mean=0, std=init_coeff_std)
         ),
-        bias_output=ParamSpec(init_zeros) if use_output_bias else None,
+        weight_spline=KANParamSpec.ParamSpec(init_ones) if use_spline_weight else None,
+        weight_residual=(
+            KANParamSpec.ParamSpec(init_xavier_uniform) if use_residual_branch else None
+        ),
+        bias_output=KANParamSpec.ParamSpec(init_zeros) if use_output_bias else None,
     )

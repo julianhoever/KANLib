@@ -6,7 +6,7 @@ from torch.nn.init import ones_ as init_ones
 from torch.nn.init import zeros_ as init_zeros
 from torch.testing import assert_close
 
-from kanlib.nn.kan_base_layer import KANBaseLayer, ModuleParamSpecs, ParamSpec
+from kanlib.nn.kan_base_layer import BasisSpec, KANBaseLayer, KANParamSpec, LayerSpec
 from kanlib.nn.spline_basis import SplineBasis
 
 
@@ -29,18 +29,25 @@ class DummyBasis(SplineBasis):
 class KANBaseLayerImpl(KANBaseLayer):
     def __init__(self, use_spline_weight: bool) -> None:
         super().__init__(
-            param_shape=(3, 4),
-            in_feature_dim=1,
-            out_feature_dim=0,
-            param_specs=ModuleParamSpecs(
-                coefficients=ParamSpec(init_ones),
-                weight_spline=ParamSpec(init_ones) if use_spline_weight else None,
-                weight_residual=ParamSpec(init_ones),
-                bias_output=ParamSpec(init_zeros),
+            layer_spec=LayerSpec(
+                input_features=4,
+                param_shape=(3, 4),
+                in_feat_dim=1,
+                out_feat_dim=0,
             ),
-            grid_size=5,
-            spline_range=torch.tensor([[-1, 1]] * 4),
-            basis_factory=DummyBasis,
+            param_specs=KANParamSpec(
+                coefficients=KANParamSpec.ParamSpec(init_ones),
+                weight_spline=KANParamSpec.ParamSpec(init_ones)
+                if use_spline_weight
+                else None,
+                weight_residual=KANParamSpec.ParamSpec(init_ones),
+                bias_output=KANParamSpec.ParamSpec(init_zeros),
+            ),
+            basis_spec=BasisSpec(
+                basis_factory=DummyBasis,
+                grid_size=5,
+                spline_range=torch.tensor([[-1, 1]] * 4),
+            ),
         )
 
     def residual_forward(self, x: torch.Tensor) -> torch.Tensor:

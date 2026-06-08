@@ -3,6 +3,7 @@ from functools import partial
 import torch
 
 from kanlib.nn.base_modules.convolution import Conv1dBase, Conv2dBase, PaddingStr
+from kanlib.nn.kan_base_layer import BasisSpec
 
 from .bspline_basis import BSplineBasis
 
@@ -28,6 +29,16 @@ class Conv1d(Conv1dBase):
         adaptive_grid_uniform_fraction: float = 0.02,
     ) -> None:
         super().__init__(
+            basis_spec=BasisSpec(
+                basis_factory=partial(
+                    BSplineBasis,
+                    spline_order=spline_order,
+                    adaptive_grid_margin=adaptive_grid_margin,
+                    adaptive_grid_uniform_fraction=adaptive_grid_uniform_fraction,
+                ),
+                grid_size=grid_size,
+                spline_range=spline_range,
+            ),
             in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=kernel_size,
@@ -35,14 +46,6 @@ class Conv1d(Conv1dBase):
             padding=padding,
             dilation=dilation,
             groups=groups,
-            grid_size=grid_size,
-            spline_range=spline_range,
-            basis_factory=partial(
-                BSplineBasis,
-                spline_order=spline_order,
-                adaptive_grid_margin=adaptive_grid_margin,
-                adaptive_grid_uniform_fraction=adaptive_grid_uniform_fraction,
-            ),
             use_output_bias=use_output_bias,
             use_residual_branch=use_residual_branch,
             use_spline_weight=use_spline_weight,
@@ -71,6 +74,16 @@ class Conv2d(Conv2dBase):
         adaptive_grid_uniform_fraction: float = 0.02,
     ) -> None:
         super().__init__(
+            basis_spec=BasisSpec(
+                basis_factory=partial(
+                    BSplineBasis,
+                    spline_order=spline_order,
+                    adaptive_grid_margin=adaptive_grid_margin,
+                    adaptive_grid_uniform_fraction=adaptive_grid_uniform_fraction,
+                ),
+                grid_size=grid_size,
+                spline_range=spline_range,
+            ),
             in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=kernel_size,
@@ -78,14 +91,6 @@ class Conv2d(Conv2dBase):
             padding=padding,
             dilation=dilation,
             groups=groups,
-            grid_size=grid_size,
-            spline_range=spline_range,
-            basis_factory=partial(
-                BSplineBasis,
-                spline_order=spline_order,
-                adaptive_grid_margin=adaptive_grid_margin,
-                adaptive_grid_uniform_fraction=adaptive_grid_uniform_fraction,
-            ),
             use_output_bias=use_output_bias,
             use_residual_branch=use_residual_branch,
             use_spline_weight=use_spline_weight,

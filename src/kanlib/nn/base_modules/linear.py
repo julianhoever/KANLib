@@ -1,35 +1,39 @@
 import torch
 from torch.nn.functional import linear, silu
 
-from kanlib.nn.kan_base_layer import BasisFactory, KANBaseLayer, default_param_specs
+from kanlib.nn.kan_base_layer import (
+    BasisSpec,
+    KANBaseLayer,
+    LayerSpec,
+    default_param_specs,
+)
 
 
 class LinearBase(KANBaseLayer):
     def __init__(
         self,
+        basis_spec: BasisSpec,
         in_features: int,
         out_features: int,
-        grid_size: int,
-        spline_range: tuple[float, float] | torch.Tensor,
-        basis_factory: BasisFactory,
         use_output_bias: bool,
         use_residual_branch: bool,
         use_spline_weight: bool,
         init_coeff_std: float = 0.1,
     ) -> None:
         super().__init__(
-            param_shape=(out_features, in_features),
-            in_feature_dim=1,
-            out_feature_dim=0,
+            layer_spec=LayerSpec(
+                input_features=in_features,
+                param_shape=(out_features, in_features),
+                in_feat_dim=1,
+                out_feat_dim=0,
+            ),
             param_specs=default_param_specs(
                 use_spline_weight=use_spline_weight,
                 use_residual_branch=use_residual_branch,
                 use_output_bias=use_output_bias,
                 init_coeff_std=init_coeff_std,
             ),
-            grid_size=grid_size,
-            spline_range=spline_range,
-            basis_factory=basis_factory,
+            basis_spec=basis_spec,
         )
         self.in_features = in_features
         self.out_features = out_features

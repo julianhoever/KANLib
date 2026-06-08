@@ -41,7 +41,6 @@ class KANBaseLayerImpl(KANBaseLayer):
             grid_size=5,
             spline_range=torch.tensor([[-1, 1]] * 4),
             basis_factory=DummyBasis,
-            spline_input_norm=None,
         )
 
     def residual_forward(self, x: torch.Tensor) -> torch.Tensor:

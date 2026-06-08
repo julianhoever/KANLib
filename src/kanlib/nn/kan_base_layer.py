@@ -43,7 +43,6 @@ class KANBaseLayer(torch.nn.Module, ABC):
         grid_size: int,
         spline_range: tuple[float, float] | torch.Tensor,
         basis_factory: BasisFactory,
-        spline_input_norm: Optional[torch.nn.LayerNorm],
     ) -> None:
         super().__init__()
         self.in_feature_dim = in_feature_dim
@@ -56,7 +55,6 @@ class KANBaseLayer(torch.nn.Module, ABC):
         )
         self.basis_factory = basis_factory
         self.param_specs = param_specs
-        self.spline_input_norm = spline_input_norm
 
         self.coefficients: torch.nn.Parameter
         self.weight_spline: torch.nn.Parameter | None
@@ -83,9 +81,7 @@ class KANBaseLayer(torch.nn.Module, ABC):
     def spline_forward(self, x: torch.Tensor) -> torch.Tensor: ...
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x_spline = x if self.spline_input_norm is None else self.spline_input_norm(x)
-
-        output = self.spline_forward(x_spline)
+        output = self.spline_forward(x)
 
         if self.weight_residual is not None:
             output += self.residual_forward(x)

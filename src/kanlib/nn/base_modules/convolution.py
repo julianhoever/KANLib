@@ -44,7 +44,6 @@ class _ConvBase(KANBaseLayer):
             grid_size=grid_size,
             spline_range=spline_range,
             basis_factory=basis_factory,
-            spline_input_norm=None,
         )
 
         if groups <= 0:

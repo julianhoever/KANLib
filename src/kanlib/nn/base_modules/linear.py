@@ -13,7 +13,6 @@ class LinearBase(KANBaseLayer):
         spline_range: tuple[float, float] | torch.Tensor,
         basis_factory: BasisFactory,
         use_output_bias: bool,
-        use_spline_input_norm: bool,
         use_residual_branch: bool,
         use_spline_weight: bool,
         init_coeff_std: float = 0.1,
@@ -31,11 +30,6 @@ class LinearBase(KANBaseLayer):
             grid_size=grid_size,
             spline_range=spline_range,
             basis_factory=basis_factory,
-            spline_input_norm=torch.nn.LayerNorm(
-                normalized_shape=in_features, elementwise_affine=False, bias=False
-            )
-            if use_spline_input_norm
-            else None,
         )
         self.in_features = in_features
         self.out_features = out_features

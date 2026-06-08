@@ -24,11 +24,6 @@ def out_features(request: pytest.FixtureRequest) -> int:
     return request.param
 
 
-@pytest.fixture(params=[False, True], ids=["without_norm", "normalized"])
-def use_spline_input_norm(request: pytest.FixtureRequest) -> bool:
-    return request.param
-
-
 @pytest.fixture(params=[False, True], ids=["without_residual", "with_residual"])
 def use_residual_branch(request: pytest.FixtureRequest) -> bool:
     return request.param
@@ -57,7 +52,6 @@ def linear(
     in_features: int,
     out_features: int,
     grid_size: int,
-    use_spline_input_norm: bool,
     use_residual_branch: bool,
     use_spline_weight: bool,
 ) -> Linear:
@@ -65,7 +59,6 @@ def linear(
         in_features=in_features,
         out_features=out_features,
         grid_size=grid_size,
-        use_spline_input_norm=use_spline_input_norm,
         use_residual_branch=use_residual_branch,
         use_spline_weight=use_spline_weight,
     )

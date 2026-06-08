@@ -1,5 +1,6 @@
 import pytest
 import torch
+
 from kanlib.nn.bspline.linear import Linear
 
 
@@ -20,11 +21,6 @@ def in_features(request: pytest.FixtureRequest) -> int:
 
 @pytest.fixture(params=[1, 2], ids=["out_1d", "out_2d"])
 def out_features(request: pytest.FixtureRequest) -> int:
-    return request.param
-
-
-@pytest.fixture(params=[False, True], ids=["without_norm", "normalized"])
-def use_spline_input_norm(request: pytest.FixtureRequest) -> bool:
     return request.param
 
 
@@ -56,7 +52,6 @@ def linear(
     in_features: int,
     out_features: int,
     grid_size: int,
-    use_spline_input_norm: bool,
     use_residual_branch: bool,
     use_spline_weight: bool,
 ) -> Linear:
@@ -65,7 +60,6 @@ def linear(
         out_features=out_features,
         spline_order=3,
         grid_size=grid_size,
-        use_spline_input_norm=use_spline_input_norm,
         use_residual_branch=use_residual_branch,
         use_spline_weight=use_spline_weight,
     )

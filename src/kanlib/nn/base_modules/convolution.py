@@ -32,12 +32,14 @@ class _ConvBase(KANBaseLayer):
         use_spline_weight: bool,
         init_coeff_std: float,
     ) -> None:
-        kernel_size = _to_tuple(kernel_size, conv_dim)
-
         super().__init__(
             layer_spec=LayerSpec(
                 input_features=in_channels,
-                param_shape=(out_channels, in_channels // groups, *kernel_size),
+                param_shape=(
+                    out_channels,
+                    in_channels // groups,
+                    *_to_tuple(kernel_size, conv_dim),
+                ),
                 in_feat_dim=1,
                 out_feat_dim=0,
             ),
@@ -56,7 +58,7 @@ class _ConvBase(KANBaseLayer):
             raise ValueError("`in_channels` must be divisible by `groups`.")
         if out_channels % groups != 0:
             raise ValueError("`out_channels` must be divisible by `groups`.")
-        if padding == "same" and stride != 1:
+        if padding == "same" and any(s != 1 for s in _to_tuple(stride, conv_dim)):
             raise ValueError("Same padding is not supported for stride != 1.")
 
         self.in_channels = in_channels

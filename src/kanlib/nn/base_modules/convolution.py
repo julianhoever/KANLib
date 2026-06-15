@@ -15,7 +15,7 @@ type PaddingStr = Literal["same", "valid"]
 type SupportedConvDim = Literal[1, 2]
 
 
-class _ConvBase(KANBaseLayer):
+class ConvBase(KANBaseLayer):
     def __init__(
         self,
         conv_dim: SupportedConvDim,
@@ -124,7 +124,7 @@ def _determine_convolution(conv_dim: SupportedConvDim) -> _ConvolutionFunc:
     return cast(_ConvolutionFunc, conv)
 
 
-class Conv1dBase(_ConvBase):
+class Conv1dBase(ConvBase):
     def __init__(
         self,
         basis_spec: BasisSpec,
@@ -157,7 +157,7 @@ class Conv1dBase(_ConvBase):
         )
 
 
-class Conv2dBase(_ConvBase):
+class Conv2dBase(ConvBase):
     def __init__(
         self,
         basis_spec: BasisSpec,

@@ -81,7 +81,7 @@ src/kanlib/
 │   ├── base_modules/       # Basis-agnostic layer topologies (LinearBase, ConvBase)
 │   ├── spline_basis/       # SplineBasis ABC + AdaptiveGrid mixin
 │   ├── bspline/            # B-spline basis + Layers
-│   └── gaussian_rbf/       # Gaussian RBF basis + Layers
+│   └── grbf/               # Gaussian RBF basis + Layers
 ├── training/               # Predefined training loops for KANs
 └── visualization/          # Utilities for plotting learned splines
 tests/                      # pytest suite mirroring the package layout

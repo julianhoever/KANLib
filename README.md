@@ -139,6 +139,21 @@ This project is influenced by essential works in the field of Kolmogorov-Arnold 
     - An implementation of KANs with B-splines that focuses on performance improvements.
     - ***Contribution to this work**: Use of the efficient B-spline basis function implementation of Efficient-KAN ([here](https://github.com/julianhoever/KANLib/blob/b76c6a47ec91acdfe4f208ad0498e4a9a04dbb21/src/kanlib/nn/bspline/bspline_basis.py#L23-L38)).*
 
+## Citation
+
+```bibtex
+@article{hoever2026kanlib,
+      title={KANLib -- An Modular, Extensible and Fast Kolmogorov-Arnold Network Implementation}, 
+      author={Julian Hoever and Gregor Schiele},
+      year={2026},
+      eprint={2606.17927},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2606.17927}, 
+}
+```
+
 ## License
 
 KANLib is released under the [MIT License](LICENSE).
+

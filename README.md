@@ -68,7 +68,7 @@ plt.show()
 ```
 
 Swap `from kanlib.nn.bspline import Linear` for
-`from kanlib.nn.gaussian_rbf import Linear` to use Gaussian RBF layers instead.
+`from kanlib.nn.grbf import Linear` to use Gaussian RBF layers instead.
 
 ## Project structure
 

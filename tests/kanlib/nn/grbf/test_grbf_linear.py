@@ -1,7 +1,6 @@
 import pytest
 import torch
-
-from kanlib.nn.gaussian_rbf.linear import Linear
+from kanlib.nn.grbf.linear import Linear
 
 
 @pytest.fixture

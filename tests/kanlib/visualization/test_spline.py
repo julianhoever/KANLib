@@ -1,16 +1,15 @@
+import kanlib.nn as knn
 import numpy as np
 import pytest
 import torch
-from torch.testing import assert_close
-
-from kanlib.nn.bspline.convolution import Conv1d, Conv2d
-from kanlib.nn.bspline.linear import Linear
-from kanlib.nn.gaussian_rbf.linear import Linear as GaussianRbfLinear
 from kanlib.visualization import SplineExtractor, spline_curve
+from torch.testing import assert_close
 
 
 def test_spline_curve_returns_1d_numpy_arrays() -> None:
-    layer = Linear(in_features=2, out_features=3, grid_size=4, spline_order=3)
+    layer = knn.bspline.Linear(
+        in_features=2, out_features=3, grid_size=4, spline_order=3
+    )
 
     x, y = spline_curve(layer, (1, 0), num_points=128)
 
@@ -20,7 +19,9 @@ def test_spline_curve_returns_1d_numpy_arrays() -> None:
 
 
 def test_spline_curve_uses_1000_points_by_default() -> None:
-    layer = Linear(in_features=1, out_features=1, grid_size=4, spline_order=3)
+    layer = knn.bspline.Linear(
+        in_features=1, out_features=1, grid_size=4, spline_order=3
+    )
 
     x, y = spline_curve(layer, (0, 0))
 
@@ -30,7 +31,7 @@ def test_spline_curve_uses_1000_points_by_default() -> None:
 
 def test_spline_curve_x_spans_the_input_features_spline_range() -> None:
     spline_range = torch.tensor([[-2.0, 2.0], [3.0, 7.0]])
-    layer = Linear(
+    layer = knn.bspline.Linear(
         in_features=2,
         out_features=1,
         grid_size=4,
@@ -46,7 +47,7 @@ def test_spline_curve_x_spans_the_input_features_spline_range() -> None:
 
 def test_spline_curve_matches_forward_for_linear_single_edge() -> None:
     torch.manual_seed(0)
-    layer = Linear(
+    layer = knn.bspline.Linear(
         in_features=1,
         out_features=1,
         grid_size=5,
@@ -64,7 +65,7 @@ def test_spline_curve_matches_forward_for_linear_single_edge() -> None:
 
 def test_spline_curve_reflects_weight_spline() -> None:
     torch.manual_seed(1)
-    layer = Linear(
+    layer = knn.bspline.Linear(
         in_features=2,
         out_features=2,
         grid_size=4,
@@ -88,7 +89,7 @@ def test_spline_curve_reflects_weight_spline() -> None:
 
 def test_spline_curve_matches_forward_for_conv1d_single_edge() -> None:
     torch.manual_seed(0)
-    conv = Conv1d(
+    conv = knn.bspline.Conv1d(
         in_channels=1,
         out_channels=1,
         kernel_size=1,
@@ -107,7 +108,7 @@ def test_spline_curve_matches_forward_for_conv1d_single_edge() -> None:
 
 def test_spline_curve_matches_forward_for_conv2d_single_edge() -> None:
     torch.manual_seed(0)
-    conv = Conv2d(
+    conv = knn.bspline.Conv2d(
         in_channels=1,
         out_channels=1,
         kernel_size=1,
@@ -126,7 +127,7 @@ def test_spline_curve_matches_forward_for_conv2d_single_edge() -> None:
 
 def test_spline_curve_selects_grouped_input_channel_for_conv() -> None:
     spline_range = torch.tensor([[0.0, 1.0], [1.0, 2.0], [2.0, 3.0], [3.0, 4.0]])
-    conv = Conv1d(
+    conv = knn.bspline.Conv1d(
         in_channels=4,
         out_channels=4,
         kernel_size=1,
@@ -152,7 +153,7 @@ def test_spline_curve_uses_provided_spline_extractor() -> None:
             return 0
 
     spline_range = torch.tensor([[0.0, 1.0], [5.0, 6.0]])
-    layer = Linear(
+    layer = knn.bspline.Linear(
         in_features=2,
         out_features=2,
         grid_size=4,
@@ -172,7 +173,7 @@ def test_spline_curve_uses_provided_spline_extractor() -> None:
 
 def test_spline_curve_matches_forward_for_gaussian_rbf_linear() -> None:
     torch.manual_seed(0)
-    layer = GaussianRbfLinear(
+    layer = knn.grbf.Linear(
         in_features=1,
         out_features=1,
         grid_size=6,
@@ -196,28 +197,34 @@ def test_spline_curve_raises_for_unsupported_layer() -> None:
 def test_spline_curve_raises_for_wrong_length_spline_index(
     spline_index: tuple[int, ...],
 ) -> None:
-    layer = Linear(in_features=2, out_features=3, grid_size=4, spline_order=3)
+    layer = knn.bspline.Linear(
+        in_features=2, out_features=3, grid_size=4, spline_order=3
+    )
 
     with pytest.raises(ValueError, match="must have length 2"):
         spline_curve(layer, spline_index)
 
 
 def test_spline_curve_raises_for_negative_spline_index() -> None:
-    layer = Linear(in_features=2, out_features=3, grid_size=4, spline_order=3)
+    layer = knn.bspline.Linear(
+        in_features=2, out_features=3, grid_size=4, spline_order=3
+    )
 
     with pytest.raises(ValueError, match="negative"):
         spline_curve(layer, (-1, 0))
 
 
 def test_spline_curve_raises_for_out_of_bounds_spline_index() -> None:
-    layer = Linear(in_features=2, out_features=3, grid_size=4, spline_order=3)
+    layer = knn.bspline.Linear(
+        in_features=2, out_features=3, grid_size=4, spline_order=3
+    )
 
     with pytest.raises(ValueError, match="out of bounds"):
         spline_curve(layer, (3, 0))
 
 
 def test_spline_curve_checks_bounds_on_all_index_dimensions() -> None:
-    conv = Conv1d(
+    conv = knn.bspline.Conv1d(
         in_channels=1, out_channels=1, kernel_size=3, grid_size=4, spline_order=3
     )
 
@@ -226,7 +233,9 @@ def test_spline_curve_checks_bounds_on_all_index_dimensions() -> None:
 
 
 def test_spline_curve_accepts_maximum_valid_spline_index() -> None:
-    layer = Linear(in_features=2, out_features=3, grid_size=4, spline_order=3)
+    layer = knn.bspline.Linear(
+        in_features=2, out_features=3, grid_size=4, spline_order=3
+    )
 
     x, y = spline_curve(layer, (2, 1), num_points=10)
 

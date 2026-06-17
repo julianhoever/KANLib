@@ -2,8 +2,7 @@ from math import floor
 
 import pytest
 import torch
-
-from kanlib.nn.gaussian_rbf.convolution import Conv1d, Conv2d
+from kanlib.nn.grbf.convolution import Conv1d, Conv2d
 
 
 @pytest.fixture(params=[2, 3])

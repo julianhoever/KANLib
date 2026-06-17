@@ -1,8 +1,7 @@
 import pytest
 import torch
+from kanlib.nn.grbf.gaussian_rbf_basis import GaussianRbfBasis
 from torch.testing import assert_close
-
-from kanlib.nn.gaussian_rbf.gaussian_rbf_basis import GaussianRbfBasis
 
 
 @pytest.fixture

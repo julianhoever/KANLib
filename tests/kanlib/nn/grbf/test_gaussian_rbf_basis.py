@@ -1,7 +1,8 @@
 import pytest
 import torch
-from kanlib.nn.grbf.gaussian_rbf_basis import GaussianRbfBasis
 from torch.testing import assert_close
+
+from kanlib.nn.grbf.gaussian_rbf_basis import GaussianRbfBasis, _compute_epsilon
 
 
 @pytest.fixture
@@ -36,3 +37,16 @@ def test_grid_oversample_is_equal(rbf: GaussianRbfBasis) -> None:
 )
 def test_forward_returns_correct_shape(rbf: GaussianRbfBasis, x: torch.Tensor) -> None:
     assert rbf(x).shape == (*x.shape, rbf.num_basis_functions)
+
+
+def test_forward_with_explicit_grid_matches_cached_grid(rbf: GaussianRbfBasis) -> None:
+    x = torch.linspace(-2.0, 2.0, 16).view(-1, 2)
+    assert_close(rbf(x), rbf(x, grid=rbf.grid))
+
+
+def test_new_epsilon_after_update(rbf: GaussianRbfBasis) -> None:
+    old_epsilon = rbf.epsilon.clone()
+    x = torch.linspace(-3.0, 3.0, 40).view(-1, 2)
+    rbf.update_grid(rbf.grid_update_from_samples(x))
+    assert_close(rbf.epsilon, _compute_epsilon(rbf.grid))
+    assert not torch.allclose(rbf.epsilon, old_epsilon)

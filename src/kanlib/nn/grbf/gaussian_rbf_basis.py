@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from functools import partial
 from typing import Optional
 
@@ -7,13 +6,6 @@ import torch
 from kanlib.nn.spline_basis import AdaptiveGrid, GridUpdate, SplineBasis
 
 _APPROXIMATED_BSPLINE_ORDER = 3
-
-
-@dataclass
-class _GridStats:
-    len: torch.Tensor
-    min: torch.Tensor
-    max: torch.Tensor
 
 
 class GaussianRbfBasis(SplineBasis, AdaptiveGrid):
@@ -31,11 +23,7 @@ class GaussianRbfBasis(SplineBasis, AdaptiveGrid):
             ),
         )
         self.margin = adaptive_grid_margin
-
-        grid_stats = _compute_grid_stats(self.grid)
-        self.register_buffer("_grid_len", grid_stats.len)
-        self.register_buffer("_grid_min", grid_stats.min)
-        self.register_buffer("_grid_max", grid_stats.max)
+        self.register_buffer("epsilon", _compute_epsilon(self.grid))
 
     @property
     def num_basis_functions(self) -> int:
@@ -58,23 +46,15 @@ class GaussianRbfBasis(SplineBasis, AdaptiveGrid):
         )
 
     def _set_grid(self, grid: torch.Tensor) -> None:
-        grid_stats = _compute_grid_stats(grid)
-        self._grid_len = grid_stats.len
-        self._grid_min = grid_stats.min
-        self._grid_max = grid_stats.max
         super()._set_grid(grid)
+        self.epsilon = _compute_epsilon(grid)
 
     def _compute_grbf_basis(
         self, x: torch.Tensor, grid: Optional[torch.Tensor]
     ) -> torch.Tensor:
-        if grid is None:
-            epsilon = (self._grid_len - 1) / (self._grid_max - self._grid_min)
-            distance = x.unsqueeze(dim=-1) - self.grid
-        else:
-            stats = _compute_grid_stats(grid)
-            epsilon = (stats.len - 1) / (stats.max - stats.min)
-            distance = x.unsqueeze(dim=-1) - grid
-
+        epsilon = self.epsilon if grid is None else _compute_epsilon(grid)
+        grid = self.grid if grid is None else grid
+        distance = x.unsqueeze(dim=-1) - grid
         return torch.exp(-1.0 * (epsilon * distance) ** 2)
 
 
@@ -91,9 +71,8 @@ def _initialize_grid(grid_size: int, spline_range: torch.Tensor) -> torch.Tensor
     return grid * scale + smin
 
 
-def _compute_grid_stats(grid: torch.Tensor) -> _GridStats:
-    return _GridStats(
-        len=torch.tensor(grid.size(dim=-1)),
-        min=grid.min(dim=-1, keepdim=True).values,
-        max=grid.max(dim=-1, keepdim=True).values,
-    )
+def _compute_epsilon(grid: torch.Tensor) -> torch.Tensor:
+    grid_len = grid.size(dim=-1)
+    grid_min = grid.min(dim=-1, keepdim=True).values
+    grid_max = grid.max(dim=-1, keepdim=True).values
+    return (grid_len - 1) / (grid_max - grid_min)

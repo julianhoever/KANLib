@@ -143,13 +143,13 @@ This project is influenced by essential works in the field of Kolmogorov-Arnold 
 
 ```bibtex
 @article{hoever2026kanlib,
-      title={KANLib -- An Modular, Extensible and Fast Kolmogorov-Arnold Network Implementation}, 
-      author={Julian Hoever and Gregor Schiele},
-      year={2026},
-      eprint={2606.17927},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2606.17927}, 
+    title={KANLib -- A Modular, Extensible and Fast Kolmogorov-Arnold Network Implementation}, 
+    author={Julian Hoever and Gregor Schiele},
+    year={2026},
+    eprint={2606.17927},
+    archivePrefix={arXiv},
+    primaryClass={cs.LG},
+    url={https://arxiv.org/abs/2606.17927}, 
 }
 ```
 

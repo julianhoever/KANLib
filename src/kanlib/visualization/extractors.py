@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import torch
 
 from kanlib.nn.base_modules.convolution import ConvBase
-from kanlib.nn.base_modules.linear import LinearBase
+from kanlib.nn.base_modules.fully_connected import FullyConnectedBase
 from kanlib.nn.kan_base_layer import KANBaseLayer
 
 
@@ -21,7 +21,7 @@ class SplineExtractor[L: KANBaseLayer](ABC):
         return self.layer.weighted_coefficients[self.spline_index].detach()
 
 
-class _LinearSplineExtractor(SplineExtractor[LinearBase]):
+class _FcSplineExtractor(SplineExtractor[FullyConnectedBase]):
     @property
     def input_feature_index(self) -> int:
         return self.spline_index[1]
@@ -40,8 +40,8 @@ class _ConvSplineExtractor(SplineExtractor[ConvBase]):
 
 
 def extractor_for(layer: KANBaseLayer) -> type[SplineExtractor]:
-    if isinstance(layer, LinearBase):
-        return _LinearSplineExtractor
+    if isinstance(layer, FullyConnectedBase):
+        return _FcSplineExtractor
     if isinstance(layer, ConvBase):
         return _ConvSplineExtractor
     raise TypeError(f"No spline extractor for layer type {type(layer).__name__}")

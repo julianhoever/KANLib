@@ -1,6 +1,7 @@
 import pytest
 import torch
-from kanlib.nn.grbf.linear import Linear
+
+from kanlib.nn.bspline.fully_connected import FullyConnected
 
 
 @pytest.fixture
@@ -47,16 +48,17 @@ def inputs(
 
 
 @pytest.fixture
-def linear(
+def fully_connected(
     in_features: int,
     out_features: int,
     grid_size: int,
     use_residual_branch: bool,
     use_spline_weight: bool,
-) -> Linear:
-    return Linear(
+) -> FullyConnected:
+    return FullyConnected(
         in_features=in_features,
         out_features=out_features,
+        spline_order=3,
         grid_size=grid_size,
         use_residual_branch=use_residual_branch,
         use_spline_weight=use_spline_weight,
@@ -64,11 +66,13 @@ def linear(
 
 
 def test_forward_pass_returns_correct_shape(
-    linear: Linear, inputs: torch.Tensor
+    fully_connected: FullyConnected, inputs: torch.Tensor
 ) -> None:
-    output = linear(inputs)
+    output = fully_connected(inputs)
     batched = inputs.dim() == 2
     target_shape = (
-        (inputs.shape[0], linear.out_features) if batched else (linear.out_features,)
+        (inputs.shape[0], fully_connected.out_features)
+        if batched
+        else (fully_connected.out_features,)
     )
     assert output.shape == target_shape

@@ -9,7 +9,7 @@ from kanlib.nn.kan_base_layer import (
 )
 
 
-class LinearBase(KANBaseLayer):
+class FullyConnectedBase(KANBaseLayer):
     def __init__(
         self,
         basis_spec: BasisSpec,

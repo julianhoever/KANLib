@@ -2,13 +2,13 @@ from functools import partial
 
 import torch
 
-from kanlib.nn.base_modules.linear import LinearBase
+from kanlib.nn.base_modules.fully_connected import FullyConnectedBase
 from kanlib.nn.kan_base_layer import BasisSpec
 
 from .gaussian_rbf_basis import GaussianRbfBasis
 
 
-class Linear(LinearBase):
+class FullyConnected(FullyConnectedBase):
     def __init__(
         self,
         in_features: int,

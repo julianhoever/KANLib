@@ -10,7 +10,7 @@ experimentation with KANs across different domains. The implementation is design
   - B-splines (`BSplineBasis`)
   - Gaussian radial basis functions (`GaussianRbfBasis`)
 - **Neural network modules** (available for every basis function)
-  - `Linear`
+  - `FullyConnected`
   - `Conv1d`, `Conv2d`
 - **Adaptive grids** — update the basis grid from data statistics during training.
 - **Grid refinement** — increase the grid size of each layer independently while training.
@@ -36,13 +36,13 @@ import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import TensorDataset
 
-from kanlib.nn.bspline import Linear
+from kanlib.nn.bspline import FullyConnected
 from kanlib.training import train
 from kanlib.visualization import spline_curve
 
 model = torch.nn.Sequential(
-    Linear(in_features=2, out_features=8, grid_size=5, spline_order=3),
-    Linear(in_features=8, out_features=1, grid_size=5, spline_order=3),
+    FullyConnected(in_features=2, out_features=8, grid_size=5, spline_order=3),
+    FullyConnected(in_features=8, out_features=1, grid_size=5, spline_order=3),
 )
 
 # Toy regression data within the default spline range [-1, 1]
@@ -67,8 +67,8 @@ plt.plot(xs, ys)
 plt.show()
 ```
 
-Swap `from kanlib.nn.bspline import Linear` for
-`from kanlib.nn.grbf import Linear` to use Gaussian RBF layers instead.
+Swap `from kanlib.nn.bspline import FullyConnected` for
+`from kanlib.nn.grbf import FullyConnected` to use Gaussian RBF layers instead.
 
 ## Project structure
 
@@ -78,7 +78,7 @@ An incomplete overview of the most important project files and packages:
 src/kanlib/
 ├── nn/                     # Neural-network modules used to build KANs
 │   ├── kan_base_layer.py   # KANBaseLayer ABC + layer/param/basis specs
-│   ├── base_modules/       # Basis-agnostic layer topologies (LinearBase, ConvBase)
+│   ├── base_modules/       # Basis-agnostic layer topologies (FullyConnectedBase, ConvBase)
 │   ├── spline_basis/       # SplineBasis ABC + AdaptiveGrid mixin
 │   ├── bspline/            # B-spline basis + Layers
 │   └── grbf/               # Gaussian RBF basis + Layers
@@ -90,7 +90,7 @@ tests/                      # pytest suite mirroring the package layout
 ## Extending KANLib
 
 KANLib separates **basis functions** (how an input is expanded into basis
-values) from **layer topologies** (how those values are combined — linear,
+values) from **layer topologies** (how those values are combined — fully connected,
 convolutional, ...). Each concrete layer is a thin wrapper that injects a basis
 into a basis-agnostic base layer, so the two can be extended independently.
 
@@ -113,17 +113,17 @@ reference implementations.
 ### Creating a new layer
 
 To pair a basis with an existing topology, subclass one of the base layers —
-`LinearBase` (`kanlib.nn.base_modules.linear`), `Conv1dBase` or `Conv2dBase`
+`FullyConnectedBase` (`kanlib.nn.base_modules.fully_connected`), `Conv1dBase` or `Conv2dBase`
 (`kanlib.nn.base_modules.convolution`) — and pass a `BasisSpec`
 (`kanlib.nn.kan_base_layer`) whose `basis_factory` is your basis class (use
-`functools.partial` to bind extra arguments). The built-in `bspline.Linear` and
+`functools.partial` to bind extra arguments). The built-in `bspline.FullyConnected` and
 `bspline.Conv1d` layers follow exactly this pattern.
 
 For a genuinely new layer type, subclass `KANBaseLayer`
 (`kanlib.nn.kan_base_layer`): forward a `LayerSpec`, `param_specs` (built with
 `default_param_specs`), and `basis_spec` to `super().__init__`, then implement
 `spline_forward` and `residual_forward` (the base `forward` combines them with
-the optional output bias). `base_modules/linear.py` is the canonical example.
+the optional output bias). `base_modules/fully_connected.py` is the canonical example.
 
 ## Credits
 

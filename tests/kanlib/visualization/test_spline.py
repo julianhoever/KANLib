@@ -1,13 +1,14 @@
-import kanlib.nn as knn
 import numpy as np
 import pytest
 import torch
-from kanlib.visualization import SplineExtractor, spline_curve
 from torch.testing import assert_close
+
+import kanlib.nn as knn
+from kanlib.visualization import SplineExtractor, spline_curve
 
 
 def test_spline_curve_returns_1d_numpy_arrays() -> None:
-    layer = knn.bspline.Linear(
+    layer = knn.bspline.FullyConnected(
         in_features=2, out_features=3, grid_size=4, spline_order=3
     )
 
@@ -19,7 +20,7 @@ def test_spline_curve_returns_1d_numpy_arrays() -> None:
 
 
 def test_spline_curve_uses_1000_points_by_default() -> None:
-    layer = knn.bspline.Linear(
+    layer = knn.bspline.FullyConnected(
         in_features=1, out_features=1, grid_size=4, spline_order=3
     )
 
@@ -31,7 +32,7 @@ def test_spline_curve_uses_1000_points_by_default() -> None:
 
 def test_spline_curve_x_spans_the_input_features_spline_range() -> None:
     spline_range = torch.tensor([[-2.0, 2.0], [3.0, 7.0]])
-    layer = knn.bspline.Linear(
+    layer = knn.bspline.FullyConnected(
         in_features=2,
         out_features=1,
         grid_size=4,
@@ -45,9 +46,9 @@ def test_spline_curve_x_spans_the_input_features_spline_range() -> None:
     assert x[-1] == pytest.approx(7.0)
 
 
-def test_spline_curve_matches_forward_for_linear_single_edge() -> None:
+def test_spline_curve_matches_forward_for_fc_single_edge() -> None:
     torch.manual_seed(0)
-    layer = knn.bspline.Linear(
+    layer = knn.bspline.FullyConnected(
         in_features=1,
         out_features=1,
         grid_size=5,
@@ -65,7 +66,7 @@ def test_spline_curve_matches_forward_for_linear_single_edge() -> None:
 
 def test_spline_curve_reflects_weight_spline() -> None:
     torch.manual_seed(1)
-    layer = knn.bspline.Linear(
+    layer = knn.bspline.FullyConnected(
         in_features=2,
         out_features=2,
         grid_size=4,
@@ -153,7 +154,7 @@ def test_spline_curve_uses_provided_spline_extractor() -> None:
             return 0
 
     spline_range = torch.tensor([[0.0, 1.0], [5.0, 6.0]])
-    layer = knn.bspline.Linear(
+    layer = knn.bspline.FullyConnected(
         in_features=2,
         out_features=2,
         grid_size=4,
@@ -171,9 +172,9 @@ def test_spline_curve_uses_provided_spline_extractor() -> None:
     assert x_override[-1] == pytest.approx(1.0)
 
 
-def test_spline_curve_matches_forward_for_gaussian_rbf_linear() -> None:
+def test_spline_curve_matches_forward_for_gaussian_rbf_fc() -> None:
     torch.manual_seed(0)
-    layer = knn.grbf.Linear(
+    layer = knn.grbf.FullyConnected(
         in_features=1,
         out_features=1,
         grid_size=6,
@@ -197,7 +198,7 @@ def test_spline_curve_raises_for_unsupported_layer() -> None:
 def test_spline_curve_raises_for_wrong_length_spline_index(
     spline_index: tuple[int, ...],
 ) -> None:
-    layer = knn.bspline.Linear(
+    layer = knn.bspline.FullyConnected(
         in_features=2, out_features=3, grid_size=4, spline_order=3
     )
 
@@ -206,7 +207,7 @@ def test_spline_curve_raises_for_wrong_length_spline_index(
 
 
 def test_spline_curve_raises_for_negative_spline_index() -> None:
-    layer = knn.bspline.Linear(
+    layer = knn.bspline.FullyConnected(
         in_features=2, out_features=3, grid_size=4, spline_order=3
     )
 
@@ -215,7 +216,7 @@ def test_spline_curve_raises_for_negative_spline_index() -> None:
 
 
 def test_spline_curve_raises_for_out_of_bounds_spline_index() -> None:
-    layer = knn.bspline.Linear(
+    layer = knn.bspline.FullyConnected(
         in_features=2, out_features=3, grid_size=4, spline_order=3
     )
 
@@ -233,7 +234,7 @@ def test_spline_curve_checks_bounds_on_all_index_dimensions() -> None:
 
 
 def test_spline_curve_accepts_maximum_valid_spline_index() -> None:
-    layer = knn.bspline.Linear(
+    layer = knn.bspline.FullyConnected(
         in_features=2, out_features=3, grid_size=4, spline_order=3
     )
 

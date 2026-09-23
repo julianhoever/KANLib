@@ -112,5 +112,5 @@ def test_adaptive_grid_raises_error_if_basis_not_support_adaptive_grid() -> None
     kan = KANBaseLayerImpl(use_spline_weight=False)
     inputs = torch.rand(1, 2, 3)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         _ = kan.update_grid(inputs)

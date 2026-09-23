@@ -2,7 +2,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from functools import partial
 from math import floor
-from typing import Any, Literal, Optional, overload
+from typing import Any, Literal, overload
 
 import torch
 from torch.utils.data import Dataset
@@ -33,9 +33,9 @@ def train(
     num_grid_updates: int = 0,
     start_grid_updates: int = 0,
     stop_grid_updates: int = -1,
-    grid_size_refinements: Optional[list[int]] = None,
+    grid_size_refinements: list[int] | None = None,
     load_best: bool = False,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device | None = None,
     num_workers: int = 0,
     pin_memory: bool = False,
     persistent_workers: bool = False,
@@ -74,9 +74,9 @@ def train_with_checkpoints(
     num_grid_updates: int = 0,
     start_grid_updates: int = 0,
     stop_grid_updates: int = -1,
-    grid_size_refinements: Optional[list[int]] = None,
+    grid_size_refinements: list[int] | None = None,
     load_best: bool = False,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device | None = None,
     num_workers: int = 0,
     pin_memory: bool = False,
     persistent_workers: bool = False,
@@ -116,9 +116,9 @@ def _train(
     num_grid_updates: int,
     start_grid_updates: int,
     stop_grid_updates: int,
-    grid_size_refinements: Optional[list[int]],
+    grid_size_refinements: list[int] | None,
     load_best: bool,
-    device: torch.device,
+    device: torch.device | None,
     num_workers: int,
     pin_memory: bool,
     persistent_workers: bool,
@@ -139,9 +139,9 @@ def _train(
     num_grid_updates: int,
     start_grid_updates: int,
     stop_grid_updates: int,
-    grid_size_refinements: Optional[list[int]],
+    grid_size_refinements: list[int] | None,
     load_best: bool,
-    device: torch.device,
+    device: torch.device | None,
     num_workers: int,
     pin_memory: bool,
     persistent_workers: bool,
@@ -161,9 +161,9 @@ def _train(
     num_grid_updates: int,
     start_grid_updates: int,
     stop_grid_updates: int,
-    grid_size_refinements: Optional[list[int]],
+    grid_size_refinements: list[int] | None,
     load_best: bool,
-    device: torch.device,
+    device: torch.device | None,
     num_workers: int,
     pin_memory: bool,
     persistent_workers: bool,

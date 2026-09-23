@@ -1,4 +1,4 @@
-from typing import Any, Optional, Protocol, Self
+from typing import Any, Protocol, Self
 
 import torch
 
@@ -26,7 +26,7 @@ def validate_grid(grid: torch.Tensor, num_features: int) -> None:
 
 
 def validate_spline_range(
-    spline_range: torch.Tensor, num_features: Optional[int] = None
+    spline_range: torch.Tensor, num_features: int | None = None
 ) -> None:
     if (
         spline_range.ndim != 2

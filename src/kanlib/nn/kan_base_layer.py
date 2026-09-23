@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Optional, Protocol
+from typing import Protocol
 
 import torch
 from torch.nn.init import normal_ as init_normal
@@ -31,9 +31,9 @@ class KANParamSpec:
         requires_grad: bool = True
 
     coefficients: ParamSpec
-    weight_spline: Optional[ParamSpec]
-    weight_residual: Optional[ParamSpec]
-    bias_output: Optional[ParamSpec]
+    weight_spline: ParamSpec | None
+    weight_residual: ParamSpec | None
+    bias_output: ParamSpec | None
 
 
 @dataclass
@@ -119,7 +119,7 @@ class KANBaseLayer(torch.nn.Module, ABC):
     @torch.no_grad()
     def update_grid(self, x: torch.Tensor) -> None:
         if not isinstance(self.basis, AdaptiveGrid):
-            raise ValueError(
+            raise TypeError(
                 f"{type(self.basis).__name__} does not support adaptive grid."
             )
 

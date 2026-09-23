@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
 
 import torch
 
@@ -30,9 +29,7 @@ class AdaptiveGrid(ABC):
     def num_features(self) -> int: ...
 
     @abstractmethod
-    def forward(
-        self, x: torch.Tensor, grid: Optional[torch.Tensor]
-    ) -> torch.Tensor: ...
+    def forward(self, x: torch.Tensor, grid: torch.Tensor | None) -> torch.Tensor: ...
 
     @abstractmethod
     def grid_update_from_samples(self, x: torch.Tensor) -> GridUpdate: ...

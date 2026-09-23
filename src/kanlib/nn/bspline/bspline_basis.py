@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, Optional
+from typing import Any
 
 import torch
 
@@ -37,7 +37,7 @@ class BSplineBasis(SplineBasis, AdaptiveGrid):
         return self.grid_size + self.spline_order
 
     def forward(
-        self, x: torch.Tensor, grid: Optional[torch.Tensor] = None
+        self, x: torch.Tensor, grid: torch.Tensor | None = None
     ) -> torch.Tensor:
         return _compute_bspline_basis(
             x=x,

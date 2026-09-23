@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy.typing as npt
 import torch
 
@@ -13,7 +11,7 @@ def spline_curve(
     layer: KANBaseLayer,
     spline_index: tuple[int, ...],
     num_points: int = 1000,
-    spline_extractor: Optional[type[SplineExtractor]] = None,
+    spline_extractor: type[SplineExtractor] | None = None,
 ) -> tuple[npt.NDArray, npt.NDArray]:
     if spline_extractor is None:
         spline_extractor = extractor_for(layer)

@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from typing import Optional
 
 import pytest
 import torch
@@ -12,7 +11,7 @@ class SplineBasisImpl(SplineBasis):
     def __init__(
         self,
         spline_range: torch.Tensor,
-        initialize_grid: Optional[Callable[[], torch.Tensor]] = None,
+        initialize_grid: Callable[[], torch.Tensor] | None = None,
     ) -> None:
         super().__init__(
             grid_size=1,
@@ -27,7 +26,7 @@ class SplineBasisImpl(SplineBasis):
         raise NotImplementedError()
 
     def forward(
-        self, x: torch.Tensor, grid: Optional[torch.Tensor] = None
+        self, x: torch.Tensor, grid: torch.Tensor | None = None
     ) -> torch.Tensor:
         raise NotImplementedError()
 

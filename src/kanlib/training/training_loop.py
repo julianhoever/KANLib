@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from functools import partial
-from typing import Any, Optional
+from typing import Any
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -22,12 +22,15 @@ def train(
     optimizer_cls: type[torch.optim.Optimizer],
     optimizer_kwargs: dict[str, Any],
     load_best: bool,
-    device: torch.device,
+    device: torch.device | None = None,
     num_workers: int = 0,
     pin_memory: bool = False,
     persistent_workers: bool = False,
-    on_epoch_starts: Optional[OnEpochStartsHook] = None,
+    on_epoch_starts: OnEpochStartsHook | None = None,
 ) -> History:
+    if device is None:
+        device = torch.device("cpu")
+
     dataloader = partial(
         DataLoader,
         batch_size=batch_size,

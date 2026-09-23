@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Optional
 
 import torch
 
@@ -30,7 +29,7 @@ class GaussianRbfBasis(SplineBasis, AdaptiveGrid):
         return self.grid_size + _APPROXIMATED_BSPLINE_ORDER
 
     def forward(
-        self, x: torch.Tensor, grid: Optional[torch.Tensor] = None
+        self, x: torch.Tensor, grid: torch.Tensor | None = None
     ) -> torch.Tensor:
         return self._compute_grbf_basis(x, grid)
 
@@ -50,7 +49,7 @@ class GaussianRbfBasis(SplineBasis, AdaptiveGrid):
         self.epsilon = _compute_epsilon(grid)
 
     def _compute_grbf_basis(
-        self, x: torch.Tensor, grid: Optional[torch.Tensor]
+        self, x: torch.Tensor, grid: torch.Tensor | None
     ) -> torch.Tensor:
         epsilon = self.epsilon if grid is None else _compute_epsilon(grid)
         grid = self.grid if grid is None else grid

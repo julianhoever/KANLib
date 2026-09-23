@@ -31,7 +31,7 @@ def train(
     optimizer_cls: type[torch.optim.Optimizer],
     optimizer_kwargs: dict[str, Any],
     num_grid_updates: int = 0,
-    start_grid_updates: int = 0,
+    start_grid_updates: int = 1,
     stop_grid_updates: int = -1,
     grid_size_refinements: list[int] | None = None,
     load_best: bool = False,
@@ -72,7 +72,7 @@ def train_with_checkpoints(
     optimizer_cls: type[torch.optim.Optimizer],
     optimizer_kwargs: dict[str, Any],
     num_grid_updates: int = 0,
-    start_grid_updates: int = 0,
+    start_grid_updates: int = 1,
     stop_grid_updates: int = -1,
     grid_size_refinements: list[int] | None = None,
     load_best: bool = False,
@@ -233,5 +233,5 @@ def _compute_grid_update_epochs(
 ) -> set[int]:
     if num_updates == 0:
         return set()
-    step_size = (stop_epoch - start_epoch) / num_updates
+    step_size = (stop_epoch - start_epoch + 1) / num_updates
     return {start_epoch + floor(step_size * i) for i in range(num_updates)}

@@ -8,12 +8,15 @@ from tqdm import tqdm
 from .history import History
 from .model_checkpoint import ModelCheckpoint
 
-type OnEpochStartsHook = Callable[[int, torch.nn.Module], None]
-
+type _OnEpochStartsHook = Callable[[int, torch.nn.Module], None]
 type OptimizerFactory = Callable[[torch.nn.Module], torch.optim.Optimizer]
+type LRSchedulerFactory = Callable[
+    [torch.optim.Optimizer], torch.optim.lr_scheduler.LRScheduler
+]
 
 
 def train(
+    *,
     model: torch.nn.Module,
     ds_train: Dataset,
     ds_val: Dataset,
@@ -21,16 +24,14 @@ def train(
     batch_size: int,
     loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
     optimizer_factory: OptimizerFactory,
-    load_best: bool,
+    lr_scheduler_factory: LRSchedulerFactory | None = None,
+    load_best: bool = False,
     device: torch.device | None = None,
     num_workers: int = 0,
     pin_memory: bool = False,
     persistent_workers: bool = False,
-    on_epoch_starts: OnEpochStartsHook | None = None,
+    on_epoch_starts: _OnEpochStartsHook | None = None,
 ) -> History:
-    if device is None:
-        device = torch.device("cpu")
-
     dataloader = partial(
         DataLoader,
         batch_size=batch_size,
@@ -41,8 +42,14 @@ def train(
     dl_train = dataloader(ds_train, shuffle=True)
     dl_val = dataloader(ds_val, shuffle=False)
 
+    if device is None:
+        device = torch.device("cpu")
+
     model.to(device)
     optimizer = optimizer_factory(model)
+    lr_scheduler = (
+        lr_scheduler_factory(optimizer) if lr_scheduler_factory is not None else None
+    )
     model_ckpt = ModelCheckpoint(model)
     history = History()
 
@@ -84,6 +91,12 @@ def train(
                     running_loss += loss_fn(outputs, targets).item()
 
             val_loss = running_loss / len(dl_val)
+
+            if lr_scheduler is not None:
+                if isinstance(lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    lr_scheduler.step(val_loss)
+                else:
+                    lr_scheduler.step()
 
             history.update(epoch, train_loss, val_loss)
             model_ckpt.update(val_loss)

@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 from kanlib.kan_utils import refine_grid, update_grid
 
 from .history import History
-from .training_loop import OptimizerFactory
+from .training_loop import LRSchedulerFactory, OptimizerFactory
 from .training_loop import train as raw_train_loop
 
 type ModelState = dict[str, Any]
@@ -23,6 +23,7 @@ class Checkpoint:
 
 
 def train(
+    *,
     model: torch.nn.Module,
     ds_train: Dataset,
     ds_val: Dataset,
@@ -30,6 +31,7 @@ def train(
     batch_size: int,
     loss_fn: torch.nn.Module,
     optimizer_factory: OptimizerFactory,
+    lr_scheduler_factory: LRSchedulerFactory | None = None,
     num_grid_updates: int = 0,
     start_grid_updates: int = 1,
     stop_grid_updates: int = -1,
@@ -48,6 +50,7 @@ def train(
         batch_size=batch_size,
         loss_fn=loss_fn,
         optimizer_factory=optimizer_factory,
+        lr_scheduler_factory=lr_scheduler_factory,
         load_best=load_best,
         num_grid_updates=num_grid_updates,
         start_grid_updates=start_grid_updates,
@@ -62,6 +65,7 @@ def train(
 
 
 def train_with_checkpoints(
+    *,
     model: torch.nn.Module,
     ds_train: Dataset,
     ds_val: Dataset,
@@ -69,6 +73,7 @@ def train_with_checkpoints(
     batch_size: int,
     loss_fn: torch.nn.Module,
     optimizer_factory: OptimizerFactory,
+    lr_scheduler_factory: LRSchedulerFactory | None = None,
     num_grid_updates: int = 0,
     start_grid_updates: int = 1,
     stop_grid_updates: int = -1,
@@ -87,6 +92,7 @@ def train_with_checkpoints(
         batch_size=batch_size,
         loss_fn=loss_fn,
         optimizer_factory=optimizer_factory,
+        lr_scheduler_factory=lr_scheduler_factory,
         load_best=load_best,
         num_grid_updates=num_grid_updates,
         start_grid_updates=start_grid_updates,
@@ -102,6 +108,7 @@ def train_with_checkpoints(
 
 @overload
 def _train(
+    *,
     model: torch.nn.Module,
     ds_train: Dataset,
     ds_val: Dataset,
@@ -109,6 +116,7 @@ def _train(
     batch_size: int,
     loss_fn: torch.nn.Module,
     optimizer_factory: OptimizerFactory,
+    lr_scheduler_factory: LRSchedulerFactory | None,
     num_grid_updates: int,
     start_grid_updates: int,
     stop_grid_updates: int,
@@ -124,6 +132,7 @@ def _train(
 
 @overload
 def _train(
+    *,
     model: torch.nn.Module,
     ds_train: Dataset,
     ds_val: Dataset,
@@ -131,6 +140,7 @@ def _train(
     batch_size: int,
     loss_fn: torch.nn.Module,
     optimizer_factory: OptimizerFactory,
+    lr_scheduler_factory: LRSchedulerFactory | None,
     num_grid_updates: int,
     start_grid_updates: int,
     stop_grid_updates: int,
@@ -145,6 +155,7 @@ def _train(
 
 
 def _train(
+    *,
     model: torch.nn.Module,
     ds_train: Dataset,
     ds_val: Dataset,
@@ -152,6 +163,7 @@ def _train(
     batch_size: int,
     loss_fn: torch.nn.Module,
     optimizer_factory: OptimizerFactory,
+    lr_scheduler_factory: LRSchedulerFactory | None,
     num_grid_updates: int,
     start_grid_updates: int,
     stop_grid_updates: int,
@@ -184,6 +196,7 @@ def _train(
         batch_size=batch_size,
         loss_fn=loss_fn,
         optimizer_factory=optimizer_factory,
+        lr_scheduler_factory=lr_scheduler_factory,
         device=device,
         num_workers=num_workers,
         pin_memory=pin_memory,

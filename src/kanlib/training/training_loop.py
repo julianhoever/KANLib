@@ -1,6 +1,5 @@
 from collections.abc import Callable
 from functools import partial
-from typing import Any
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -11,6 +10,8 @@ from .model_checkpoint import ModelCheckpoint
 
 type OnEpochStartsHook = Callable[[int, torch.nn.Module], None]
 
+type OptimizerFactory = Callable[[torch.nn.Module], torch.optim.Optimizer]
+
 
 def train(
     model: torch.nn.Module,
@@ -19,8 +20,7 @@ def train(
     epochs: int,
     batch_size: int,
     loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-    optimizer_cls: type[torch.optim.Optimizer],
-    optimizer_kwargs: dict[str, Any],
+    optimizer_factory: OptimizerFactory,
     load_best: bool,
     device: torch.device | None = None,
     num_workers: int = 0,
@@ -42,7 +42,7 @@ def train(
     dl_val = dataloader(ds_val, shuffle=False)
 
     model.to(device)
-    optimizer = optimizer_cls(model.parameters(), **optimizer_kwargs)
+    optimizer = optimizer_factory(model)
     model_ckpt = ModelCheckpoint(model)
     history = History()
 

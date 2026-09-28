@@ -63,8 +63,8 @@ def train(
             running_loss = 0.0
 
             for samples, targets in dl_train:
-                samples = samples.to(device)
-                targets = targets.to(device)
+                samples = samples.to(device, non_blocking=True)
+                targets = targets.to(device, non_blocking=True)
 
                 def closure() -> float:
                     optimizer.zero_grad()
@@ -84,8 +84,8 @@ def train(
 
             with torch.no_grad():
                 for samples, targets in dl_val:
-                    samples = samples.to(device)
-                    targets = targets.to(device)
+                    samples = samples.to(device, non_blocking=True)
+                    targets = targets.to(device, non_blocking=True)
 
                     outputs = model(samples)
                     running_loss += loss_fn(outputs, targets).item()
